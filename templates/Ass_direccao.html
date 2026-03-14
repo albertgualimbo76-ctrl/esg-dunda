@@ -30,12 +30,10 @@ table th { background:#06b6d4; color:white; }
 <form id="formAssistencia">
 <input type="hidden" id="assistenciaId">
 
-<!-- Professor Assistido -->
 <select id="professor_assistido_nome" required>
     <option value="">Professor Assistido</option>
 </select>
 
-<!-- Diretor Assistente -->
 <select id="diretor_assistente_nome" required>
     <option value="">Direcao Assistente</option>
 </select>
@@ -79,11 +77,26 @@ const API = window.location.hostname === "localhost" || window.location.hostname
     ? "http://127.0.0.1:8000"
     : "https://esg-dunda.onrender.com";
 
+// ===== FUNÇÃO AUXILIAR PARA FETCH COM ERRO DETALHADO =====
+async function fetchComErro(url, options = {}) {
+    try {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+            const text = await res.text();
+            console.error(`Erro HTTP ${res.status} (${res.statusText}): ${text}`);
+            throw new Error(text);
+        }
+        return await res.json();
+    } catch(err) {
+        console.error("Erro na requisição:", err);
+        throw err;
+    }
+}
+
 // ===== CARREGAR DROPDOWNS =====
 async function carregarProfessores(){
     try {
-        const res = await fetch(`${API}/assistencias-direcao/professores`);
-        const dados = await res.json();
+        const dados = await fetchComErro(`${API}/assistencias-direcao/professores`);
         const assistido = document.getElementById("professor_assistido_nome");
         assistido.innerHTML = '<option value="">Professor Assistido</option>';
         dados.forEach(p => assistido.innerHTML += `<option value="${p}">${p}</option>`);
@@ -92,8 +105,7 @@ async function carregarProfessores(){
 
 async function carregarDiretores(){
     try {
-        const res = await fetch(`${API}/assistencias-direcao/diretores`);
-        const dados = await res.json();
+        const dados = await fetchComErro(`${API}/assistencias-direcao/diretores`);
         const select = document.getElementById("diretor_assistente_nome");
         select.innerHTML = '<option value="">Diretor Assistente</option>';
         dados.forEach(d => select.innerHTML += `<option value="${d}">${d}</option>`);
@@ -103,8 +115,7 @@ async function carregarDiretores(){
 // ===== LISTAR ASSISTÊNCIAS =====
 async function listar(){
     try {
-        const res = await fetch(`${API}/assistencias-direcao/`);
-        const dados = await res.json();
+        const dados = await fetchComErro(`${API}/assistencias-direcao/`);
         const tbody = document.getElementById("assistenciasBody");
         tbody.innerHTML = "";
         dados.forEach(a => {
@@ -127,7 +138,7 @@ async function listar(){
                 </td>
             </tr>`;
         });
-    } catch(err){ console.error("Erro ao listar:", err); }
+    } catch(err){ console.error("Erro ao listar assistências:", err); }
 }
 
 // ===== SALVAR / ATUALIZAR =====
@@ -148,13 +159,13 @@ async function salvar(e){
     };
     try {
         if(id){
-            await fetch(`${API}/assistencias-direcao/id/${parseInt(id)}`, {
+            await fetchComErro(`${API}/assistencias-direcao/id/${parseInt(id)}`, {
                 method: "PUT",
                 headers: {"Content-Type":"application/json"},
                 body: JSON.stringify(dados)
             });
         } else {
-            await fetch(`${API}/assistencias-direcao/`, {
+            await fetchComErro(`${API}/assistencias-direcao/`, {
                 method: "POST",
                 headers: {"Content-Type":"application/json"},
                 body: JSON.stringify(dados)
@@ -163,15 +174,13 @@ async function salvar(e){
         document.getElementById("formAssistencia").reset();
         document.getElementById("assistenciaId").value="";
         listar();
-    } catch(err){ console.error("Erro ao salvar:", err);}
+    } catch(err){ console.error("Erro ao salvar/atualizar:", err);}
 }
 
 // ===== EDITAR =====
 async function editar(id){
     try {
-        const res = await fetch(`${API}/assistencias-direcao/id/${parseInt(id)}`);
-        if(!res.ok) throw new Error(`Assistência ${id} não encontrada`);
-        const a = await res.json();
+        const a = await fetchComErro(`${API}/assistencias-direcao/id/${parseInt(id)}`);
         document.getElementById("assistenciaId").value = a.id;
         document.getElementById("professor_assistido_nome").value = a.professor_assistido_nome;
         document.getElementById("diretor_assistente_nome").value = a.diretor_assistente_nome;
@@ -182,34 +191,30 @@ async function editar(id){
         document.getElementById("localizacao_sala").value = a.localizacao_sala;
         document.getElementById("trimestre").value = a.trimestre;
         document.getElementById("data_hora").value = a.data_hora.slice(0,16);
-    } catch(err){ console.error(err);}
+    } catch(err){ console.error("Erro ao carregar assistência para editar:", err);}
 }
 
 // ===== DELETAR =====
 async function deletar(id){
-    if(confirm("Deseja realmente apagar esta assistência?")){
-        await fetch(`${API}/assistencias-direcao/id/${parseInt(id)}`, {method:"DELETE"});
-        listar();
-    }
+    try {
+        if(confirm("Deseja realmente apagar esta assistência?")){
+            await fetchComErro(`${API}/assistencias-direcao/id/${parseInt(id)}`, {method:"DELETE"});
+            listar();
+        }
+    } catch(err){ console.error("Erro ao deletar assistência:", err);}
 }
 
 // ===== ALTERAR STATUS GLOBAL DO TRIMESTRE =====
 async function alterarStatusTrimestreGlobal(trimestre, checked){
     const status = checked ? "APROVADO" : "NAO";
     try{
-        const res = await fetch(`${API}/assistencias-direcao/aprovar-trimestre`, {
+        await fetchComErro(`${API}/assistencias-direcao/aprovar-trimestre`, {
             method: "PUT",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ trimestre: trimestre.toString(), status: status })
         });
-        if(!res.ok){
-            console.error("Erro ao alterar status:", await res.text());
-        } else {
-            listar();
-        }
-    } catch(err){
-        console.error("Erro ao alterar status global:", err);
-    }
+        listar();
+    } catch(err){ console.error("Erro ao alterar status global:", err);}
 }
 
 // ===== INICIALIZAÇÃO =====
