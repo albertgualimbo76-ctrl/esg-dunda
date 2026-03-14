@@ -33,22 +33,18 @@ h1 {
     margin-bottom:20px;
 }
 
-textarea {
-    width:100%;
-    height:120px;
-    padding:10px;
-    border-radius:6px;
-    border:1px solid #cbd5e1;
-    resize:none;
-    margin-bottom:20px;
-}
-
-input[type="text"] {
+textarea, input[type="text"] {
     width:100%;
     padding:10px;
     border-radius:6px;
     border:1px solid #cbd5e1;
     margin-bottom:10px;
+}
+
+textarea {
+    height:120px;
+    resize:none;
+    margin-bottom:20px;
 }
 
 button {
@@ -68,6 +64,7 @@ button:disabled {
 .status {
     margin-top:15px;
     font-weight:bold;
+    white-space: pre-line;
 }
 </style>
 </head>
@@ -106,6 +103,27 @@ button:disabled {
 const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
     ? "http://127.0.0.1:8000"
     : window.location.origin;
+
+// Função para remover acentos e caracteres especiais
+function normalizeText(str) {
+    return str
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9 .,!?@-]/g, "");
+}
+
+// Normalização em tempo real do input
+function attachNormalization(inputElement) {
+    inputElement.addEventListener("input", () => {
+        const pos = inputElement.selectionStart; // mantém posição do cursor
+        inputElement.value = normalizeText(inputElement.value);
+        inputElement.setSelectionRange(pos, pos);
+    });
+}
+
+// Aplica nos campos
+attachNormalization(document.getElementById("mensagem"));
+attachNormalization(document.getElementById("contactosExtras"));
 
 function getTiposSelecionados() {
     return Array.from(document.querySelectorAll('input[name="tipo"]:checked'))
@@ -162,7 +180,7 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
 
         statusMsg.innerText = `A enviar para ${numeros.length} números...`;
 
-        // 🔥 ENVIO SEQUENCIAL (1 POR VEZ)
+        // ENVIO SEQUENCIAL
         for (let i = 0; i < numeros.length; i++) {
 
             const numero = numeros[i];
@@ -193,11 +211,9 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
                 falhados.push(numero);
             }
 
-            // Pequena pausa para evitar sobrecarga
             await new Promise(resolve => setTimeout(resolve, 300));
         }
 
-        // Resultado final
         statusMsg.style.color = falhados.length > 0 ? "orange" : "green";
         statusMsg.innerText =
             `Envio concluído ✅\nEnviados: ${enviados.length} | Falhados: ${falhados.length}`;
@@ -213,7 +229,6 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
     btn.disabled = false;
 
 });
-
 </script>
 
 </body>
