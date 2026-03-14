@@ -3,11 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import update
 from typing import List
-
 from database import get_db
 from models.assistencia import AssistenciaMutua
-from models.contactos_professores import ContactoProfessor
-from models.contactos_diretor import ContactoDiretor
+from models.contactos_professores import ContactoProfessor  # Apenas essa tabela
 from schemas.assistencia import AssistenciaCreate, AssistenciaResponse
 
 router = APIRouter(prefix="/assistencias", tags=["Assistências Mútuas"])
@@ -22,21 +20,22 @@ async def listar_professores(db: AsyncSession = Depends(get_db)):
     return [{"id": p.id, "nome": p.nome} for p in professores]
 
 # -----------------------------
-# Listar diretores (dropdown)
-# -----------------------------
-@router.get("/ass_direccao")
-async def listar_diretores(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ContactoDiretor))
-    diretores = result.scalars().all()
-    return [{"id": d.id, "nome": d.nome} for d in diretores]
-
-# -----------------------------
 # Criar assistência
 # -----------------------------
 @router.post("/", response_model=AssistenciaResponse)
 async def criar_assistencia(dados: AssistenciaCreate, db: AsyncSession = Depends(get_db)):
+    # Buscar o professor assistido na tabela ContactoProfessor
     assistido = await db.get(ContactoProfessor, dados.professor_assistido_id)
-    assistente = await db.get(ContactoDiretor, dados.professor_assistente_id)  # agora pega da tabela diretores
+    # Buscar o professor assistente na tabela ContactoProfessor
+    assistente = await db.get(ContactoProfessor, dados.professor_assistente_id)
+
+    # Verificar se ambos os registros foram encontrados
+    if not assistido:
+        raise HTTPException(status_code=404, detail="Professor assistido não encontrado")
+    if not assistente:
+        raise HTTPException(status_code=404, detail="Professor assistente não encontrado")
+
+    # Criar nova assistência
     nova = AssistenciaMutua(
         professor_assistido_nome=assistido.nome,
         professor_assistente_nome=assistente.nome,
@@ -48,9 +47,12 @@ async def criar_assistencia(dados: AssistenciaCreate, db: AsyncSession = Depends
         trimestre=dados.trimestre,
         data_hora=dados.data_hora
     )
+
+    # Adicionar no banco de dados
     db.add(nova)
     await db.commit()
     await db.refresh(nova)
+
     return nova
 
 # -----------------------------
@@ -99,8 +101,15 @@ async def atualizar_assistencia(id: int, dados: AssistenciaCreate, db: AsyncSess
         raise HTTPException(status_code=404, detail="Assistência não encontrada")
 
     assistido = await db.get(ContactoProfessor, dados.professor_assistido_id)
-    assistente = await db.get(ContactoDiretor, dados.professor_assistente_id)  # pega da tabela diretores
+    assistente = await db.get(ContactoProfessor, dados.professor_assistente_id)
 
+    # Verificar se ambos os registros foram encontrados
+    if not assistido:
+        raise HTTPException(status_code=404, detail="Professor assistido não encontrado")
+    if not assistente:
+        raise HTTPException(status_code=404, detail="Professor assistente não encontrado")
+
+    # Atualizar dados da assistência
     assistencia.professor_assistido_nome = assistido.nome
     assistencia.professor_assistente_nome = assistente.nome
     assistencia.classe = dados.classe
