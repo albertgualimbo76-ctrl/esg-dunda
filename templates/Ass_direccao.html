@@ -73,9 +73,7 @@ table th { background:#06b6d4; color:white; }
 </div>
 
 <script>
-const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:8000"
-    : "https://esg-dunda.onrender.com";
+const API = "http://127.0.0.1:8000";
 
 // ===== FUNÇÃO AUXILIAR PARA FETCH COM ERRO DETALHADO =====
 async function fetchComErro(url, options = {}) {
