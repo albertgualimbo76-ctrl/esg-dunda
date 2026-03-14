@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Envio de SMS - EP Phandira-2</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#f1f5f9;
+    margin:0;
+    padding:0;
+}
+
+.container {
+    max-width:900px;
+    margin:50px auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.checkbox-group {
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+textarea {
+    width:100%;
+    height:120px;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #cbd5e1;
+    resize:none;
+    margin-bottom:20px;
+}
+
+input[type="text"] {
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #cbd5e1;
+    margin-bottom:10px;
+}
+
+button {
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    background:#06b6d4;
+    color:white;
+    cursor:pointer;
+}
+
+button:disabled {
+    background:#94a3b8;
+    cursor:not-allowed;
+}
+
+.status {
+    margin-top:15px;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>Enviar SMS</h1>
+
+<form id="formMensagem">
+
+<div class="checkbox-group">
+    <label><input type="checkbox" name="tipo" value="diretor"> Diretor</label>
+    <label><input type="checkbox" name="tipo" value="direcao"> Direção</label>
+    <label><input type="checkbox" name="tipo" value="professores"> Professores</label>
+    <label><input type="checkbox" name="tipo" value="funcionarios"> Funcionários</label>
+</div>
+
+<label>Contactos extras (9 dígitos separados por vírgula)</label>
+<input type="text" id="contactosExtras" placeholder="841234567, 871112233">
+
+<label>Mensagem</label>
+<textarea id="mensagem" required></textarea>
+
+<button type="submit" id="enviarBtn">Enviar SMS</button>
+
+<div class="status" id="statusMsg"></div>
+
+</form>
+
+</div>
+
+<script>
+
+// URL dinâmica (local e Render)
+const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+    ? "http://127.0.0.1:8000"
+    : window.location.origin;
+
+function getTiposSelecionados() {
+    return Array.from(document.querySelectorAll('input[name="tipo"]:checked'))
+                .map(cb => cb.value);
+}
+
+document.getElementById("formMensagem").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const btn = document.getElementById("enviarBtn");
+    const statusMsg = document.getElementById("statusMsg");
+
+    btn.disabled = true;
+    statusMsg.style.color = "black";
+    statusMsg.innerText = "A preparar envio...";
+
+    const tipos = getTiposSelecionados();
+    const mensagem = document.getElementById("mensagem").value.trim();
+    const contactosExtrasInput = document.getElementById("contactosExtras").value.trim();
+
+    let numeros = [];
+
+    try {
+
+        // Buscar números do banco
+        for (const tipo of tipos) {
+            const res = await fetch(`${API_BASE}/contactos/${tipo}`);
+            if (!res.ok) continue;
+            const dados = await res.json();
+            dados.forEach(c => numeros.push(c.telefone));
+        }
+
+        // Adicionar contactos extras
+        if (contactosExtrasInput) {
+            const extras = contactosExtrasInput
+                .split(",")
+                .map(c => c.trim())
+                .filter(c => /^\d{9}$/.test(c))
+                .map(c => "258" + c);
+
+            numeros = numeros.concat(extras);
+        }
+
+        // Remover duplicados
+        numeros = [...new Set(numeros)];
+
+        if (numeros.length === 0) {
+            throw new Error("Nenhum número válido encontrado.");
+        }
+
+        let enviados = [];
+        let falhados = [];
+
+        statusMsg.innerText = `A enviar para ${numeros.length} números...`;
+
+        // 🔥 ENVIO SEQUENCIAL (1 POR VEZ)
+        for (let i = 0; i < numeros.length; i++) {
+
+            const numero = numeros[i];
+
+            statusMsg.innerText =
+                `A enviar (${i + 1}/${numeros.length})...`;
+
+            const payload = {
+                sender_id: "ESG-DUNDA",
+                mensagem: mensagem,
+                numeros: [numero]
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/sms/enviar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    falhados.push(numero);
+                } else {
+                    enviados.push(numero);
+                }
+
+            } catch (err) {
+                falhados.push(numero);
+            }
+
+            // Pequena pausa para evitar sobrecarga
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        // Resultado final
+        statusMsg.style.color = falhados.length > 0 ? "orange" : "green";
+        statusMsg.innerText =
+            `Envio concluído ✅\nEnviados: ${enviados.length} | Falhados: ${falhados.length}`;
+
+        document.getElementById("formMensagem").reset();
+
+    } catch (error) {
+
+        statusMsg.style.color = "red";
+        statusMsg.innerText = "Erro: " + error.message;
+    }
+
+    btn.disabled = false;
+
+});
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>ESG-DUNDA</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html,body{height:100%;}
+body{display:flex;background:#f1f5f9;}
+
+/* SIDEBAR */
+.sidebar{
+    width:260px;
+    background:linear-gradient(180deg,#06b6d4,#22c55e);
+    color:white;
+    padding:25px;
+}
+.logo{font-size:22px;font-weight:bold;margin-bottom:40px;}
+.menu{display:flex;flex-direction:column;gap:12px;}
+
+.menu a{
+    text-decoration:none;
+    color:white;
+    padding:12px;
+    border-radius:8px;
+    background:rgba(255,255,255,0.1);
+    cursor:pointer;
+}
+.menu a:hover{background:rgba(255,255,255,0.25);}
+
+/* MAIN */
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+}
+
+/* TOPBAR */
+.topbar{
+    height:70px;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 30px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    z-index:2;
+}
+
+/* ÁREA CENTRAL */
+.painel{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:2;
+    text-align:center;
+}
+
+.painel h2{
+    font-size:28px;
+    color:#0f172a;
+    margin-bottom:10px;
+}
+
+.painel p{
+    color:#475569;
+    font-size:18px;
+}
+
+/* FUNDO ANIMADO */
+.fundo-animado{
+    position:absolute;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    overflow:hidden;
+    z-index:1;
+}
+
+/* círculos animados */
+.fundo-animado span{
+    position:absolute;
+    display:block;
+    border-radius:50%;
+    background:rgba(6,182,212,0.25);
+    animation:flutuar linear infinite;
+}
+
+/* tamanhos e posições diferentes */
+.fundo-animado span:nth-child(1){
+    width:220px;height:220px;left:10%;animation-duration:25s;
+}
+.fundo-animado span:nth-child(2){
+    width:150px;height:150px;left:30%;animation-duration:18s;
+}
+.fundo-animado span:nth-child(3){
+    width:260px;height:260px;left:60%;animation-duration:28s;
+}
+.fundo-animado span:nth-child(4){
+    width:180px;height:180px;left:80%;animation-duration:22s;
+}
+.fundo-animado span:nth-child(5){
+    width:120px;height:120px;left:50%;animation-duration:16s;
+}
+
+@keyframes flutuar{
+    0%{
+        transform:translateY(100vh) scale(0.8);
+        opacity:0;
+    }
+    20%{opacity:1;}
+    100%{
+        transform:translateY(-120vh) scale(1.2);
+        opacity:0;
+    }
+}
+
+/* FOOTER */
+.footer{
+    padding:12px 30px;
+    font-size:13px;
+    color:#64748b;
+    background:white;
+    text-align:right;
+    z-index:2;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="logo">🏫 ESG-DUNDA</div>
+
+    <div class="menu">
+
+        <!-- BOTÃO PARA ROTA -->
+        <a onclick="agendarEncontros()">Agendar encontros-SMS</a>
+        <a onclick="criarContacto()">Gerenciar contactos-SMS</a>
+        <a onclick="criarInformacoes()">Enviar outras informacoes-SMS</a>
+        <a onclick="criarAssistencias()">Fazer Plano de assistencias mútuas</a>
+        <a onclick="criarAss_direccao()">Fazer Plano de assistencias de direccao</a>
+
+        <!-- Quero adicionar outros aqui futuramente -->
+
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="topbar">
+        <h3>ESG-DUNDA</h3>
+        <strong>👤 Usuário</strong>
+    </div>
+
+    <!-- FUNDO ANIMADO -->
+    <div class="fundo-animado">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- TEXTO CENTRAL -->
+    <div class="painel">
+        <div>
+            <h2>Bem-vindo ao painel</h2>
+            <p>Selecione uma opção no menu lateral.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        © <span id="year"></span> Proempy Services
+    </div>
+
+</div>
+
+<script>
+document.getElementById("year").textContent =
+new Date().getFullYear();
+
+/* Abre página independente */
+function abrirDadosAluno(){
+    window.location.href = "/dados_aluno";
+}
+
+function agendarEncontros(){
+    window.location.href = "/encontros";
+}
+
+function criarContacto(){
+    window.location.href = "/contacto";
+}
+
+function criarInformacoes(){
+    window.location.href = "/informacoes";
+}
+
+function criarAssistencias(){
+    window.location.href = "/assistencia";
+}
+    function criarAss_direccao(){
+    window.location.href = "/ass_direccao";
+}
+</script>
+
+</body>
+</html>

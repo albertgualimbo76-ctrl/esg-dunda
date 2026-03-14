@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Gestão de Contactos - EP Phandira-2</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
+.container { max-width:1200px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); overflow-x:auto; }
+h1 { text-align:center; margin-bottom:20px; color:#0f172a; }
+form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:30px; }
+form input { padding:10px; border-radius:6px; border:1px solid #cbd5e1; flex:1; min-width:150px; }
+.checkbox-group { display:flex; gap:15px; flex-wrap:wrap; }
+.checkbox-group label { display:flex; align-items:center; gap:5px; }
+form button { padding:10px 20px; border:none; border-radius:6px; background:#06b6d4; color:white; cursor:pointer; transition:.3s; }
+form button:hover { background:#0891b2; }
+table { width:100%; border-collapse:collapse; margin-top:20px; min-width:700px; }
+table th, table td { border:1px solid #cbd5e1; padding:10px; text-align:left; font-size:14px; }
+table th { background:#06b6d4; color:white; }
+.actions button { margin-right:5px; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
+.actions .edit { background:#22c55e; color:white; }
+.actions .delete { background:#ef4444; color:white; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Adicionar/Atualizar/Apagar Contactos</h1>
+
+    <!-- FORMULÁRIO -->
+    <form id="formContacto">
+        <input type="hidden" id="contactoId" value="">
+        <div class="checkbox-group">
+            <p>Escolha apenas as opções onde deseja adicionar o contacto</p>
+            <label><input type="checkbox" name="tipo" value="diretor"> Diretor/Adjunto</label>
+            <label><input type="checkbox" name="tipo" value="direcao"> Direção/Chefe de Secretaria</label>
+            <label><input type="checkbox" name="tipo" value="professores"> Professores</label>
+            <label><input type="checkbox" name="tipo" value="funcionarios"> Funcionários</label>
+        </div>
+        <input type="text" id="nome" placeholder="Nome" required>
+        <input type="text" id="telefone" placeholder="Telefone (9 dígitos)" maxlength="9" required>
+        <button type="submit">Salvar</button>
+    </form>
+
+    <!-- TABELA DE CONTACTOS -->
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="contactosBody"></tbody>
+    </table>
+</div>
+
+<script>
+const API_BASE = ""; // base da API
+
+// ==========================
+// FUNÇÕES AUXILIARES
+// ==========================
+
+// Remove acentos e caracteres especiais
+function removerAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "");
+}
+
+// Reset form
+function resetForm() {
+    document.getElementById("formContacto").reset();
+    document.getElementById("contactoId").value = "";
+}
+
+// Pega tipos selecionados
+function getTiposSelecionados() {
+    return Array.from(document.querySelectorAll('input[name="tipo"]:checked')).map(cb => cb.value);
+}
+
+// ==========================
+// LISTAR CONTACTOS
+// ==========================
+async function listarContactos() {
+    const tbody = document.getElementById("contactosBody");
+    tbody.innerHTML = "";
+    const tipos = ["diretor", "direcao", "professores", "funcionarios"];
+    for (const tipo of tipos) {
+        const res = await fetch(`${API_BASE}/contactos/${tipo}`);
+        const dados = await res.json();
+        dados.forEach(c => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${c.id}</td>
+                <td>${tipo}</td>
+                <td>${c.nome}</td>
+                <td>${c.telefone}</td>
+                <td class="actions">
+                    <button class="edit" onclick="editar('${tipo}', ${c.id})">Editar</button>
+                    <button class="delete" onclick="deletar('${tipo}', ${c.id})">Apagar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+}
+
+// ==========================
+// CRIAR OU ATUALIZAR CONTACTO
+// ==========================
+async function criarOuAtualizarContacto(e) {
+    e.preventDefault();
+    const id = document.getElementById("contactoId").value;
+    const tipos = getTiposSelecionados();
+    let nome = removerAcentos(document.getElementById("nome").value.trim());
+    let telefone = document.getElementById("telefone").value.trim();
+
+    if (!nome || !telefone || tipos.length === 0) {
+        alert("Preencha todos os campos corretamente");
+        return;
+    }
+
+    if (!/^\d{9}$/.test(telefone)) {
+        alert("Telefone deve ter exatamente 9 dígitos");
+        return;
+    }
+
+    telefone = "258" + telefone;
+    const dados = { nome, telefone };
+
+    for (const tipo of tipos) {
+        if (id) {
+            await fetch(`${API_BASE}/contactos/${tipo}/${id}`, {
+                method: "PUT",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(dados)
+            });
+        } else {
+            await fetch(`${API_BASE}/contactos/${tipo}`, {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(dados)
+            });
+        }
+    }
+
+    resetForm();
+    listarContactos();
+}
+
+// ==========================
+// EDITAR CONTACTO
+// ==========================
+async function editar(tipo, id) {
+    const res = await fetch(`${API_BASE}/contactos/${tipo}`);
+    const dados = await res.json();
+    const c = dados.find(item => item.id === id);
+    if (!c) return;
+    document.getElementById("contactoId").value = c.id;
+    document.getElementById("nome").value = c.nome;
+    document.getElementById("telefone").value = c.telefone.slice(3); // remove prefixo 258
+    // marca o checkbox do tipo
+    document.querySelectorAll('input[name="tipo"]').forEach(cb => cb.checked = cb.value === tipo);
+}
+
+// ==========================
+// DELETAR CONTACTO
+// ==========================
+async function deletar(tipo, id) {
+    if (confirm("Tem certeza que deseja apagar este contacto?")) {
+        await fetch(`${API_BASE}/contactos/${tipo}/${id}`, { method: "DELETE" });
+        listarContactos();
+    }
+}
+
+// ==========================
+// EVENTOS
+// ==========================
+document.getElementById("formContacto").addEventListener("submit", criarOuAtualizarContacto);
+
+// Remove acentos enquanto digita
+document.getElementById("nome").addEventListener("input", (e) => {
+    const cursorPos = e.target.selectionStart;
+    e.target.value = removerAcentos(e.target.value);
+    e.target.setSelectionRange(cursorPos, cursorPos);
+});
+
+// Inicializa lista
+listarContactos();
+</script>
+
+</body>
+</html>

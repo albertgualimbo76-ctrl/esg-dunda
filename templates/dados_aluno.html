@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>SIGE — EP Phandira-2</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+html,body{height:100%;}
+body{display:flex;background:#f1f5f9;}
+
+/* SIDEBAR */
+.sidebar{
+    width:260px;
+    background:linear-gradient(180deg,#06b6d4,#22c55e);
+    color:white;
+    padding:25px;
+}
+.logo{font-size:22px;font-weight:bold;margin-bottom:40px;}
+
+.menu{display:flex;flex-direction:column;gap:12px;}
+.menu a{
+    text-decoration:none;color:white;padding:12px;border-radius:8px;
+    background:rgba(255,255,255,0.1);
+    cursor:pointer;
+}
+.menu a:hover{background:rgba(255,255,255,0.25);}
+
+.submenu{
+    display:none;
+    flex-direction:column;
+    margin-left:10px;
+    gap:8px;
+}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;}
+.topbar{
+    height:70px;background:white;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 30px;box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+.content{
+    padding:25px;
+    display:none;
+}
+
+/* TABELA */
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+th,td{padding:10px;border:1px solid #ddd;text-align:left;}
+th{background:#06b6d4;color:white;}
+
+button{
+    padding:6px 12px;border:none;border-radius:6px;
+    background:#06b6d4;color:white;cursor:pointer;
+}
+button:disabled{
+    background:#94a3b8;
+    cursor:not-allowed;
+}
+
+/* CÉLULAS EDITÁVEIS */
+.editavel{
+    background:#fff7cc;
+    outline:2px solid #facc15;
+}
+
+/* MODAL */
+.modal{
+    display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.5);
+    justify-content:center;align-items:center;
+}
+.modal-content{
+    background:white;padding:20px;border-radius:10px;width:350px;
+}
+.modal-content input,select{
+    width:100%;padding:8px;margin-bottom:10px;
+}
+
+/* AGUARDE */
+.aguarde{
+    font-weight:bold;
+    color:#334155;
+    margin-bottom:10px;
+}
+
+/* FOOTER */
+.footer{
+    padding:12px 30px;font-size:13px;color:#64748b;
+    background:white;margin-top:auto;text-align:right;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="logo">🏫 Phandira-2</div>
+
+    <div class="menu">
+
+        <a onclick="toggleSubmenu()">Seleccione uma opcao ▾</a>
+
+        <div id="submenuAlunos" class="submenu">
+            <a onclick="abrirCadastro()">Cadastrar aluno</a>
+            <a onclick="listarAlunos()">Ver dados dos alunos</a>
+            <a onclick="buscarPorID()">Ver aluno por ID</a>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <h3>Painel DAP</h3>
+        <strong>👤 DAP</strong>
+    </div>
+
+    <div id="areaConteudo" class="content">
+
+        <div id="msgAguarde" class="aguarde" style="display:none;">
+            Aguarde...
+        </div>
+
+        <table id="tabelaAlunos">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Nascimento</th>
+                    <th>Sexo</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+
+    <div class="footer">
+        © <span id="year"></span> Proempy Services
+    </div>
+</div>
+
+<!-- MODAL CADASTRO -->
+<div id="modalCadastro" class="modal">
+    <div class="modal-content">
+        <h3>Cadastrar Aluno</h3>
+
+        <input id="nome" placeholder="Nome">
+        <input id="data" type="date">
+
+        <select id="sexo">
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+        </select>
+
+        <button id="btnSalvar" onclick="cadastrarAluno(this)">Salvar</button>
+        <button onclick="fecharModal()">Cancelar</button>
+    </div>
+</div>
+
+<script>
+document.getElementById("year").textContent=new Date().getFullYear();
+
+/* SUBMENU */
+function toggleSubmenu(){
+    const s=document.getElementById("submenuAlunos");
+    s.style.display=s.style.display==="flex"?"none":"flex";
+}
+
+/* MOSTRAR ÁREA */
+function mostrarArea(){
+    document.getElementById("areaConteudo").style.display="block";
+}
+
+/* AGUARDE GLOBAL */
+function mostrarAguarde(){
+    msgAguarde.style.display="block";
+}
+function esconderAguarde(){
+    msgAguarde.style.display="none";
+}
+
+/* MODAL */
+function abrirCadastro(){
+    modalCadastro.style.display="flex";
+}
+function fecharModal(){
+    modalCadastro.style.display="none";
+}
+
+/* FORMATAR DATA */
+function formatarData(dataISO){
+    const [ano,mes,dia]=dataISO.split("-");
+    return `${dia}/${mes}/${ano}`;
+}
+
+/* ===================== CADASTRAR ===================== */
+async function cadastrarAluno(btn){
+
+    const texto=btn.textContent;
+
+    btn.textContent="Aguarde...";
+    btn.disabled=true;
+
+    const aluno={
+        nome:nome.value,
+        data_nascimento:data.value,
+        sexo:sexo.value
+    };
+
+    const res=await fetch("/alunos/",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(aluno)
+    });
+
+    btn.textContent=texto;
+    btn.disabled=false;
+
+    if(res.ok){
+
+        nome.value="";
+        data.value="";
+        sexo.value="M";
+
+        fecharModal();
+        listarAlunos();
+
+    }else{
+        alert("Erro ao cadastrar aluno");
+    }
+}
+
+/* ===================== LISTAR ===================== */
+async function listarAlunos(){
+
+    mostrarArea();
+    mostrarAguarde();
+
+    const res=await fetch("/alunos/");
+    const alunos=await res.json();
+
+    esconderAguarde();
+
+    const tbody=document.querySelector("#tabelaAlunos tbody");
+    tbody.innerHTML="";
+    alunos.forEach(adicionarNaTabela);
+}
+
+/* ===================== BUSCAR ID ===================== */
+async function buscarPorID(){
+
+    const id=prompt("Digite o ID:");
+    if(!id) return;
+
+    mostrarArea();
+    mostrarAguarde();
+
+    const res=await fetch(`/alunos/${id}`);
+
+    esconderAguarde();
+
+    if(!res.ok){
+        alert("Aluno não encontrado");
+        return;
+    }
+
+    const aluno=await res.json();
+
+    const tbody=document.querySelector("#tabelaAlunos tbody");
+    tbody.innerHTML="";
+    adicionarNaTabela(aluno);
+}
+
+/* ===================== ADICIONAR LINHA ===================== */
+function adicionarNaTabela(a){
+
+    const tr=document.createElement("tr");
+
+    tr.innerHTML=`
+        <td>${a.id}</td>
+        <td>${a.nome}</td>
+        <td>${formatarData(a.data_nascimento)}</td>
+        <td>${a.sexo}</td>
+        <td>
+            <button onclick="editarLinha(this, ${a.id})">Atualizar</button>
+            <button onclick="apagarAluno(${a.id})">Apagar</button>
+        </td>
+    `;
+
+    document.querySelector("#tabelaAlunos tbody").appendChild(tr);
+}
+
+/* ===================== EDITAR ===================== */
+function editarLinha(btn,id){
+
+    const tr=btn.parentElement.parentElement;
+    const tds=tr.querySelectorAll("td");
+
+    tds[1].contentEditable=true;
+    tds[2].contentEditable=true;
+
+    tds[1].classList.add("editavel");
+    tds[2].classList.add("editavel");
+
+    const sexoAtual=tds[3].textContent;
+
+    tds[3].innerHTML=`
+        <select class="editavel">
+            <option value="M" ${sexoAtual==="M"?"selected":""}>M</option>
+            <option value="F" ${sexoAtual==="F"?"selected":""}>F</option>
+        </select>
+    `;
+
+    btn.textContent="Salvar";
+    btn.onclick=()=>salvarEdicao(btn,tr,id);
+}
+
+/* ===================== SALVAR EDIÇÃO ===================== */
+async function salvarEdicao(btn,tr,id){
+
+    const texto=btn.textContent;
+    btn.textContent="Aguarde...";
+    btn.disabled=true;
+
+    const tds=tr.querySelectorAll("td");
+
+    const nome=tds[1].textContent;
+    const dataUsuario=tds[2].textContent;
+    const [dia,mes,ano]=dataUsuario.split("/");
+    const dataISO=`${ano}-${mes}-${dia}`;
+
+    const sexo=tds[3].querySelector("select").value;
+
+    const aluno={
+        nome:nome,
+        data_nascimento:dataISO,
+        sexo:sexo
+    };
+
+    const res=await fetch(`/alunos/${id}`,{
+        method:"PUT",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(aluno)
+    });
+
+    btn.textContent=texto;
+    btn.disabled=false;
+
+    if(res.ok) listarAlunos();
+    else alert("Erro ao atualizar");
+}
+
+/* ===================== APAGAR ===================== */
+async function apagarAluno(id){
+
+    if(!confirm("Deseja apagar?")) return;
+
+    const res=await fetch(`/alunos/${id}`,{method:"DELETE"});
+
+    if(res.ok) listarAlunos();
+    else alert("Erro ao apagar");
+}
+</script>
+
+</body>
+</html>
