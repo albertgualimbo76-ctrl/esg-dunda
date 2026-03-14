@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 # Banco de dados
 from database import Base, engine
 
-# Routers API
+# Routers API e Pages
 from routers import (
     professor, aluno, classe, turma, matricula, admin, dap,
     director, chefe_secretaria, funcionario_secretaria, usuario_professor,
@@ -19,8 +19,8 @@ from routers.assistencia_direcao import router as assistencia_direcao_router
 
 # 🔥 Monitores automáticos
 from services.monitor_encontros import monitorar_encontros
-from services.monitorar_assistencias import monitorar_assistencias  # monitor antigo
-from services.monitor_ass_direcao import monitorar_assistencias_direcao as monitor_ass_direcao  # monitor de direção
+from services.monitorar_assistencias import monitorar_assistencias
+from services.monitor_ass_direcao import monitorar_assistencias_direcao as monitor_ass_direcao
 
 # Verifica ambiente
 is_production = os.getenv("ENV") == "production"
@@ -43,6 +43,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 # ==========================
 # Evento startup
 # ==========================
@@ -67,31 +68,31 @@ async def root():
     return RedirectResponse(url="/esg_dunda")
 
 # ==========================
-# API routes
+# API routes (sem prefixo /api)
 # ==========================
-app.include_router(professor.router, prefix="/api")
-app.include_router(assistencia_direcao_router, prefix="/api")  # Assistências de direção
-app.include_router(aluno.router, prefix="/api")
-app.include_router(classe.router, prefix="/api")
-app.include_router(turma.router, prefix="/api")
-app.include_router(matricula.router, prefix="/api")
-app.include_router(admin.router, prefix="/api")
-app.include_router(dap.router, prefix="/api")
-app.include_router(director.router, prefix="/api")
-app.include_router(chefe_secretaria.router, prefix="/api")
-app.include_router(funcionario_secretaria.router, prefix="/api")
-app.include_router(usuario_professor.router, prefix="/api")
-app.include_router(dashboard.router, prefix="/api")
-app.include_router(importar_alunos.router, prefix="/api")
-app.include_router(sms.router, prefix="/api")
-app.include_router(encontro.router, prefix="/api")
-app.include_router(contactos.router, prefix="/api")
-app.include_router(encontros.router, prefix="/api")
-app.include_router(contacto.router, prefix="/api")
-app.include_router(informacoes.router, prefix="/api")
-app.include_router(assistencias.router, prefix="/api")
-app.include_router(assistencia.router, prefix="/api")
-app.include_router(ass_direccao.router, prefix="/api")
+app.include_router(professor.router)  # /professor
+app.include_router(assistencia_direcao_router)  # /assistencias-direcao
+app.include_router(aluno.router)  # /aluno
+app.include_router(classe.router)  # /classe
+app.include_router(turma.router)  # /turma
+app.include_router(matricula.router)  # /matricula
+app.include_router(admin.router)  # /admin
+app.include_router(dap.router)  # /dap
+app.include_router(director.router)  # /director
+app.include_router(chefe_secretaria.router)  # /chefe_secretaria
+app.include_router(funcionario_secretaria.router)  # /funcionario_secretaria
+app.include_router(usuario_professor.router)  # /usuario_professor
+app.include_router(dashboard.router)  # /dashboard
+app.include_router(importar_alunos.router)  # /importar_alunos
+app.include_router(sms.router)  # /sms
+app.include_router(encontro.router)  # /encontro
+app.include_router(contactos.router)  # /contactos
+app.include_router(encontros.router)  # /encontros
+app.include_router(contacto.router)  # /contacto
+app.include_router(informacoes.router)  # /informacoes
+app.include_router(assistencias.router)  # /assistencias
+app.include_router(assistencia.router)  # /assistencia
+app.include_router(ass_direccao.router)  # /ass_direccao
 
 # ==========================
 # HTML pages
