@@ -172,7 +172,10 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
         numeros = [...new Set(numeros)];
 
         if (numeros.length === 0) {
-            throw new Error("Nenhum número válido encontrado.");
+            statusMsg.style.color = "red";
+            statusMsg.innerText = "Erro: Nenhum número válido encontrado.";
+            btn.disabled = false;
+            return;
         }
 
         let enviados = [];

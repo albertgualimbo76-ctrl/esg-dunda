@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>Gestão de Encontros - EP Phandira-2</title>
+<title>Gestão de Encontros</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
 .container { max-width:1200px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); overflow-x:auto; }
@@ -61,6 +61,11 @@ table th { background:#06b6d4; color:white; }
 </div>
 
 <script>
+// Função para remover acentos e caracteres especiais
+function removerAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "");
+}
+
 const API_BASE = ""; // base da API (deixe vazio se estiver no mesmo domínio)
 
 // Reset form
@@ -174,11 +179,22 @@ async function editar(id) {
 
 // Deletar
 async function deletar(id) {
-    if (confirm("Tem certeza que deseja cancelar este encontro?")) {
-        await fetch(`${API_BASE}/encontros/${id}`, { method: "DELETE" });
-        listarEncontros();
-    }
+    await fetch(`${API_BASE}/encontros/${id}`, { method: "DELETE" });
+    listarEncontros();
 }
+
+// Evento para remover acentos enquanto digita
+document.getElementById("titulo").addEventListener("input", function(e) {
+    const cursorPos = e.target.selectionStart;
+    e.target.value = removerAcentos(e.target.value);
+    e.target.setSelectionRange(cursorPos, cursorPos);
+});
+
+document.getElementById("descricao").addEventListener("input", function(e) {
+    const cursorPos = e.target.selectionStart;
+    e.target.value = removerAcentos(e.target.value);
+    e.target.setSelectionRange(cursorPos, cursorPos);
+});
 
 // EVENTOS
 document.getElementById("formEncontro").addEventListener("submit", criarOuAtualizarEncontro);

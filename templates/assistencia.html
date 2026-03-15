@@ -20,12 +20,26 @@ table th { background:#06b6d4; color:white; }
 .actions .delete { background:#ef4444; color:white; }
 .status-checkboxes { display:flex; gap:20px; margin-bottom:15px; }
 .status-checkboxes label { font-weight:bold; }
+
+/* Estilo para mensagens */
+#mensagem {
+    display: none;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border-radius: 5px;
+    border: 1px solid #f5c6cb;
+}
 </style>
 </head>
 <body>
 
 <div class="container">
 <h1>Planificar  Assistências Mútuas</h1>
+
+<!-- Div para exibir mensagens -->
+<div id="mensagem"></div>
 
 <form id="formAssistencia">
 <input type="hidden" id="assistenciaId">
@@ -74,6 +88,22 @@ table th { background:#06b6d4; color:white; }
 <script>
 const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:8000" : "https://esg-dunda.onrender.com";
 
+// Função para exibir mensagens
+function exibirMensagem(mensagem, tipo = "erro") {
+    const mensagemDiv = document.getElementById("mensagem");
+    mensagemDiv.style.display = "block";
+    mensagemDiv.textContent = mensagem;
+    if (tipo === "erro") {
+        mensagemDiv.style.backgroundColor = "#f8d7da";
+        mensagemDiv.style.color = "#721c24";
+        mensagemDiv.style.border = "1px solid #f5c6cb";
+    } else if (tipo === "sucesso") {
+        mensagemDiv.style.backgroundColor = "#d4edda";
+        mensagemDiv.style.color = "#155724";
+        mensagemDiv.style.border = "1px solid #c3e6cb";
+    }
+}
+
 // Carregar dropdown de professores
 async function carregarProfessores(){
     const res = await fetch(`${API}/assistencias/professores`);
@@ -82,7 +112,7 @@ async function carregarProfessores(){
     const assistente = document.getElementById("professor_assistente_nome");
     assistido.innerHTML = '<option value="">Professor Assistido</option>';
     assistente.innerHTML = '<option value="">Professor Assistente</option>';
-    dados.forEach(p=>{
+    dados.forEach(p => {
         assistido.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
         assistente.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
     });
@@ -94,7 +124,7 @@ async function listar(){
     const dados = await res.json();
     const tbody = document.getElementById("assistenciasBody");
     tbody.innerHTML = "";
-    dados.forEach(a=>{
+    dados.forEach(a => {
         tbody.innerHTML += `<tr>
             <td>${a.id}</td>
             <td>${a.professor_assistido_nome}</td>
@@ -136,26 +166,28 @@ async function salvar(e){
         data_hora: formattedDate
     };
 
-    try{
+    try {
         if(id){
             await fetch(`${API}/assistencias/id/${id}`, {
-                method:"PUT",
-                headers:{"Content-Type":"application/json"},
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(dados)
             });
-        }else{
+            exibirMensagem("Assistência atualizada com sucesso!", "sucesso");
+        } else {
             await fetch(`${API}/assistencias/`, {
-                method:"POST",
-                headers:{"Content-Type":"application/json"},
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(dados)
             });
+            exibirMensagem("Assistência salva com sucesso!", "sucesso");
         }
         document.getElementById("formAssistencia").reset();
         document.getElementById("assistenciaId").value = "";
         listar();
-    }catch(err){
+    } catch (err) {
         console.error("Erro ao salvar assistência:", err);
-        alert("Erro ao salvar assistência.");
+        exibirMensagem("Erro ao salvar assistência.", "erro");
     }
 }
 
@@ -172,28 +204,28 @@ async function editar(id){
     document.getElementById("numero_sala").value = a.numero_sala;
     document.getElementById("localizacao_sala").value = a.localizacao_sala;
     document.getElementById("trimestre").value = a.trimestre;
-    document.getElementById("data_hora").value = a.data_hora.slice(0,16);
+    document.getElementById("data_hora").value = a.data_hora.slice(0, 16);
 }
 
 // Deletar
 async function deletar(id){
-    if(confirm("Deseja realmente apagar esta assistência?")){
-        await fetch(`${API}/assistencias/id/${id}`, {method:"DELETE"});
-        listar();
-    }
+    await fetch(`${API}/assistencias/id/${id}`, { method: "DELETE" });
+    exibirMensagem("Assistência apagada com sucesso!", "sucesso");
+    listar();
 }
 
 // Aprovar/Desaprovar trimestre
 async function alterarStatusTrimestre(trimestre, checked){
-    const status = checked ? "APROVADO":"NAO";
+    const status = checked ? "APROVADO" : "NAO";
     const url = new URL(`${API}/assistencias/aprovar-trimestre`);
     url.searchParams.append("trimestre", trimestre.toString());
     url.searchParams.append("status", status);
     const res = await fetch(url, { method: "PUT" });
-    if(!res.ok){
+    if (!res.ok) {
         console.error("Erro ao alterar status:", await res.text());
-        alert("Erro ao alterar status do trimestre");
-    }else{
+        exibirMensagem("Erro ao alterar status do trimestre", "erro");
+    } else {
+        exibirMensagem("Status do trimestre alterado com sucesso!", "sucesso");
         listar();
     }
 }

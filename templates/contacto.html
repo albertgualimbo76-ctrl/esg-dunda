@@ -2,7 +2,7 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<title>Gestão de Contactos - EP Phandira-2</title>
+<title>Gestão de Contactos</title>
 <style>
 body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
 .container { max-width:1200px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); overflow-x:auto; }
@@ -19,12 +19,26 @@ table th { background:#06b6d4; color:white; }
 .actions button { margin-right:5px; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
 .actions .edit { background:#22c55e; color:white; }
 .actions .delete { background:#ef4444; color:white; }
+
+/* Estilo para mensagens */
+#mensagem {
+    display: none;
+    padding: 10px;
+    margin-bottom: 20px;
+    background-color: #f8d7da;
+    color: #721c24;
+    border-radius: 5px;
+    border: 1px solid #f5c6cb;
+}
 </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Adicionar/Atualizar/Apagar Contactos</h1>
+
+    <!-- Div para exibir mensagens -->
+    <div id="mensagem"></div>
 
     <!-- FORMULÁRIO -->
     <form id="formContacto">
@@ -62,6 +76,22 @@ const API_BASE = ""; // base da API
 // ==========================
 // FUNÇÕES AUXILIARES
 // ==========================
+
+// Exibir mensagens na página
+function exibirMensagem(mensagem, tipo = "erro") {
+    const mensagemDiv = document.getElementById("mensagem");
+    mensagemDiv.style.display = "block";
+    mensagemDiv.textContent = mensagem;
+    if (tipo === "erro") {
+        mensagemDiv.style.backgroundColor = "#f8d7da";
+        mensagemDiv.style.color = "#721c24";
+        mensagemDiv.style.border = "1px solid #f5c6cb";
+    } else if (tipo === "sucesso") {
+        mensagemDiv.style.backgroundColor = "#d4edda";
+        mensagemDiv.style.color = "#155724";
+        mensagemDiv.style.border = "1px solid #c3e6cb";
+    }
+}
 
 // Remove acentos e caracteres especiais
 function removerAcentos(texto) {
@@ -117,12 +147,12 @@ async function criarOuAtualizarContacto(e) {
     let telefone = document.getElementById("telefone").value.trim();
 
     if (!nome || !telefone || tipos.length === 0) {
-        alert("Preencha todos os campos corretamente");
+        exibirMensagem("Preencha todos os campos corretamente", "erro");
         return;
     }
 
     if (!/^\d{9}$/.test(telefone)) {
-        alert("Telefone deve ter exatamente 9 dígitos");
+        exibirMensagem("Telefone deve ter exatamente 9 dígitos", "erro");
         return;
     }
 
@@ -130,18 +160,24 @@ async function criarOuAtualizarContacto(e) {
     const dados = { nome, telefone };
 
     for (const tipo of tipos) {
-        if (id) {
-            await fetch(`${API_BASE}/contactos/${tipo}/${id}`, {
-                method: "PUT",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(dados)
-            });
-        } else {
-            await fetch(`${API_BASE}/contactos/${tipo}`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify(dados)
-            });
+        try {
+            if (id) {
+                await fetch(`${API_BASE}/contactos/${tipo}/${id}`, {
+                    method: "PUT",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(dados)
+                });
+            } else {
+                await fetch(`${API_BASE}/contactos/${tipo}`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(dados)
+                });
+            }
+            exibirMensagem("Contacto salvo com sucesso!", "sucesso");
+        } catch (err) {
+            console.error("Erro ao salvar contacto:", err);
+            exibirMensagem("Erro ao salvar o contacto", "erro");
         }
     }
 
@@ -168,9 +204,13 @@ async function editar(tipo, id) {
 // DELETAR CONTACTO
 // ==========================
 async function deletar(tipo, id) {
-    if (confirm("Tem certeza que deseja apagar este contacto?")) {
+    try {
         await fetch(`${API_BASE}/contactos/${tipo}/${id}`, { method: "DELETE" });
+        exibirMensagem("Contacto apagado com sucesso!", "sucesso");
         listarContactos();
+    } catch (err) {
+        console.error("Erro ao deletar contacto:", err);
+        exibirMensagem("Erro ao apagar o contacto", "erro");
     }
 }
 
