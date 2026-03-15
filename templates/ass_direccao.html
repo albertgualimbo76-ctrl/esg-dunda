@@ -1,265 +1,549 @@
 <!DOCTYPE html>
 <html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistências Direção</title>
-    <style>
-        body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
-        .container { max-width:1400px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.1); overflow-x:auto; }
-        h1 { text-align:center; margin-bottom:20px; color:#0f172a; }
-        form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px; }
-        form input, form select { padding:10px; border-radius:6px; border:1px solid #cbd5e1; flex:1; min-width:150px; }
-        form button { padding:10px 20px; border:none; border-radius:6px; background:#06b6d4; color:white; cursor:pointer; transition:.3s; }
-        form button:hover { background:#0891b2; }
-        .status-checkboxes { display:flex; gap:20px; margin-bottom:15px; }
-        .status-checkboxes label { font-weight:bold; }
-        table { width:100%; border-collapse:collapse; margin-top:20px; min-width:1200px; }
-        table th, table td { border:1px solid #cbd5e1; padding:10px; text-align:left; font-size:14px; }
-        table th { background:#06b6d4; color:white; }
-        .actions button { margin-right:5px; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
-        .actions .edit { background:#22c55e; color:white; }
-        .actions .delete { background:#ef4444; color:white; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assistências Direção</title>
 
-        /* Estilo da área de mensagens */
-        #mensagem {
-            display: none;
-            padding: 10px;
-            margin-bottom: 20px;
-            background-color: #f8d7da;
-            color: #721c24;
-            border-radius: 5px;
-            border: 1px solid #f5c6cb;
-        }
-    </style>
+<style>
+
+body{
+font-family: Arial, sans-serif;
+background:#f1f5f9;
+margin:0;
+padding:0;
+}
+
+.container{
+max-width:1400px;
+margin:50px auto;
+background:white;
+padding:30px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,.1);
+overflow-x:auto;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+color:#0f172a;
+}
+
+form{
+display:flex;
+flex-wrap:wrap;
+gap:15px;
+margin-bottom:20px;
+}
+
+form input, form select{
+padding:10px;
+border-radius:6px;
+border:1px solid #cbd5e1;
+flex:1;
+min-width:150px;
+}
+
+form button{
+padding:10px 20px;
+border:none;
+border-radius:6px;
+background:#06b6d4;
+color:white;
+cursor:pointer;
+transition:.3s;
+}
+
+form button:hover{
+background:#0891b2;
+}
+
+.status-checkboxes{
+display:flex;
+gap:20px;
+margin-bottom:15px;
+}
+
+.status-checkboxes label{
+font-weight:bold;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+min-width:1200px;
+}
+
+table th, table td{
+border:1px solid #cbd5e1;
+padding:10px;
+text-align:left;
+font-size:14px;
+}
+
+table th{
+background:#06b6d4;
+color:white;
+}
+
+.actions button{
+margin-right:5px;
+padding:5px 10px;
+border:none;
+border-radius:4px;
+cursor:pointer;
+}
+
+.actions .edit{
+background:#22c55e;
+color:white;
+}
+
+.actions .delete{
+background:#ef4444;
+color:white;
+}
+
+#mensagem{
+display:none;
+padding:10px;
+margin-bottom:20px;
+background-color:#f8d7da;
+color:#721c24;
+border-radius:5px;
+border:1px solid #f5c6cb;
+}
+
+</style>
 </head>
+
 <body>
 
 <div class="container">
-    <h1>Planificar Assistências Direção</h1>
 
-    <!-- Div para mostrar mensagens -->
-    <div id="mensagem"></div>
+<h1>Planificar Assistências Direção</h1>
 
-    <form id="formAssistencia">
-        <input type="hidden" id="assistenciaId">
+<div id="mensagem"></div>
 
-        <select id="professor_assistido_nome" required>
-            <option value="">Professor Assistido</option>
-        </select>
+<form id="formAssistencia">
 
-        <select id="diretor_assistente_nome" required>
-            <option value="">Direção Assistente</option>
-        </select>
+<input type="hidden" id="assistenciaId">
 
-        <input type="text" id="classe" placeholder="Classe" required>
-        <input type="text" id="turma" placeholder="Turma" required>
-        <input type="text" id="disciplina" placeholder="Disciplina" required>
-        <input type="text" id="numero_sala" placeholder="Número da Sala" required>
-        <input type="text" id="localizacao_sala" placeholder="Localização da Sala" required>
+<select id="professor_assistido_nome" required>
+<option value="">Professor Assistido</option>
+</select>
 
-        <select id="trimestre" required>
-            <option value="">Trimestre</option>
-            <option value="1">1º</option>
-            <option value="2">2º</option>
-            <option value="3">3º</option>
-        </select>
+<select id="diretor_assistente_nome" required>
+<option value="">Direção Assistente</option>
+</select>
 
-        <input type="datetime-local" id="data_hora" required>
-        <button type="submit">Salvar</button>
-    </form>
+<input type="text" id="classe" placeholder="Classe" required>
+<input type="text" id="turma" placeholder="Turma" required>
+<input type="text" id="disciplina" placeholder="Disciplina" required>
+<input type="text" id="numero_sala" placeholder="Número da Sala" required>
+<input type="text" id="localizacao_sala" placeholder="Localização da Sala" required>
 
-    <div class="status-checkboxes">
-        <label><input type="checkbox" onchange="alterarStatusTrimestreGlobal(1, this.checked)"> Aprovar 1º Trimestre</label>
-        <label><input type="checkbox" onchange="alterarStatusTrimestreGlobal(2, this.checked)"> Aprovar 2º Trimestre</label>
-        <label><input type="checkbox" onchange="alterarStatusTrimestreGlobal(3, this.checked)"> Aprovar 3º Trimestre</label>
-    </div>
+<select id="trimestre" required>
+<option value="">Trimestre</option>
+<option value="1">1º</option>
+<option value="2">2º</option>
+<option value="3">3º</option>
+</select>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th><th>Assistido</th><th>Direção</th><th>Classe</th><th>Turma</th><th>Disciplina</th><th>Nº Sala</th><th>Localização</th>
-                <th>Trimestre</th><th>Data/Hora</th><th>Status</th><th>Criado Em</th><th>Ações</th>
-            </tr>
-        </thead>
-        <tbody id="assistenciasBody"></tbody>
-    </table>
+<input type="datetime-local" id="data_hora" required>
+
+<button type="submit">Salvar</button>
+
+</form>
+
+<div class="status-checkboxes">
+
+<label>
+<input type="checkbox" onchange="alterarStatusTrimestreGlobal(1,this.checked)">
+Aprovar 1º Trimestre
+</label>
+
+<label>
+<input type="checkbox" onchange="alterarStatusTrimestreGlobal(2,this.checked)">
+Aprovar 2º Trimestre
+</label>
+
+<label>
+<input type="checkbox" onchange="alterarStatusTrimestreGlobal(3,this.checked)">
+Aprovar 3º Trimestre
+</label>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+<th>ID</th>
+<th>Assistido</th>
+<th>Direção</th>
+<th>Classe</th>
+<th>Turma</th>
+<th>Disciplina</th>
+<th>Nº Sala</th>
+<th>Localização</th>
+<th>Trimestre</th>
+<th>Data/Hora</th>
+<th>Status</th>
+<th>Criado Em</th>
+<th>Ações</th>
+</tr>
+
+</thead>
+
+<tbody id="assistenciasBody"></tbody>
+
+</table>
+
 </div>
 
 <script>
+
 const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://127.0.0.1:8000"
-    : "https://esg-dunda.onrender.com";
+? "http://127.0.0.1:8000"
+: "https://ep-phandira-2.onrender.com";
 
-// ===== FUNÇÃO PARA EXIBIR MENSAGENS =====
-function exibirMensagem(mensagem, tipo = "erro") {
-    const mensagemDiv = document.getElementById("mensagem");
-    mensagemDiv.style.display = "block";
-    mensagemDiv.textContent = mensagem;
-    if (tipo === "erro") {
-        mensagemDiv.style.backgroundColor = "#f8d7da";
-        mensagemDiv.style.color = "#721c24";
-        mensagemDiv.style.border = "1px solid #f5c6cb";
-    } else if (tipo === "sucesso") {
-        mensagemDiv.style.backgroundColor = "#d4edda";
-        mensagemDiv.style.color = "#155724";
-        mensagemDiv.style.border = "1px solid #c3e6cb";
-    }
+
+/* =========================================
+   REMOVER ACENTOS E CARACTERES ESPECIAIS
+========================================= */
+
+function limparTexto(texto){
+
+return texto
+.normalize("NFD")
+.replace(/[\u0300-\u036f]/g,"")
+.replace(/[^a-zA-Z0-9 ]/g,"");
+
 }
 
-// ===== FUNÇÃO AUXILIAR PARA FETCH COM ERRO DETALHADO =====
-async function fetchComErro(url, options = {}) {
-    try {
-        const res = await fetch(url, options);
-        if (!res.ok) {
-            const text = await res.text();
-            console.error(`Erro HTTP ${res.status} (${res.statusText}): ${text}`);
-            exibirMensagem(`Erro HTTP ${res.status}: ${text}`, "erro");
-            throw new Error(text);
-        }
-        return await res.json();
-    } catch(err) {
-        console.error("Erro na requisição:", err);
-        exibirMensagem("Ocorreu um erro na requisição. Tente novamente.", "erro");
-        throw err;
-    }
+/* aplica em todos os inputs automaticamente */
+
+document.addEventListener("input", function(e){
+
+if(e.target.tagName === "INPUT"){
+
+if(e.target.type !== "datetime-local"){
+
+e.target.value = limparTexto(e.target.value)
+
 }
 
-// ===== CARREGAR DROPDOWNS =====
+}
+
+})
+
+
+
+/* ================================
+   MENSAGEM
+================================ */
+
+function exibirMensagem(mensagem,tipo="erro"){
+
+const div = document.getElementById("mensagem")
+
+div.style.display="block"
+
+div.textContent = mensagem
+
+if(tipo==="erro"){
+
+div.style.background="#f8d7da"
+div.style.color="#721c24"
+
+}
+
+else{
+
+div.style.background="#d4edda"
+div.style.color="#155724"
+
+}
+
+}
+
+
+/* ================================
+   FETCH PADRÃO
+================================ */
+
+async function fetchComErro(url,options={}){
+
+const res = await fetch(url,options)
+
+if(!res.ok){
+
+const text = await res.text()
+
+exibirMensagem("Erro "+res.status+" : "+text)
+
+throw new Error(text)
+
+}
+
+return res.json()
+
+}
+
+
+/* ================================
+   DROPDOWNS
+================================ */
+
 async function carregarProfessores(){
-    try {
-        const dados = await fetchComErro(`${API}/assistencias-direcao/professores`);
-        const assistido = document.getElementById("professor_assistido_nome");
-        assistido.innerHTML = '<option value="">Professor Assistido</option>';
-        dados.forEach(p => assistido.innerHTML += `<option value="${p}">${p}</option>`);
-    } catch(err){ console.error(err); }
+
+const dados = await fetchComErro(`${API}/assistencias-direcao/professores`)
+
+const select = document.getElementById("professor_assistido_nome")
+
+select.innerHTML='<option value="">Professor Assistido</option>'
+
+dados.forEach(p=>{
+
+select.innerHTML += `<option value="${p}">${p}</option>`
+
+})
+
 }
 
 async function carregarDiretores(){
-    try {
-        const dados = await fetchComErro(`${API}/assistencias-direcao/diretores`);
-        const select = document.getElementById("diretor_assistente_nome");
-        select.innerHTML = '<option value="">Diretor Assistente</option>';
-        dados.forEach(d => select.innerHTML += `<option value="${d}">${d}</option>`);
-    } catch(err){ console.error(err); }
+
+const dados = await fetchComErro(`${API}/assistencias-direcao/diretores`)
+
+const select = document.getElementById("diretor_assistente_nome")
+
+select.innerHTML='<option value="">Diretor Assistente</option>'
+
+dados.forEach(d=>{
+
+select.innerHTML += `<option value="${d}">${d}</option>`
+
+})
+
 }
 
-// ===== LISTAR ASSISTÊNCIAS =====
+
+/* ================================
+   LISTAR
+================================ */
+
 async function listar(){
-    try {
-        const dados = await fetchComErro(`${API}/assistencias-direcao/`);
-        const tbody = document.getElementById("assistenciasBody");
-        tbody.innerHTML = "";
-        dados.forEach(a => {
-            tbody.innerHTML += `<tr>
-                <td>${a.id}</td>
-                <td>${a.professor_assistido_nome}</td>
-                <td>${a.diretor_assistente_nome}</td>
-                <td>${a.classe}</td>
-                <td>${a.turma}</td>
-                <td>${a.disciplina}</td>
-                <td>${a.numero_sala}</td>
-                <td>${a.localizacao_sala}</td>
-                <td>${a.trimestre}</td>
-                <td>${new Date(a.data_hora).toLocaleString()}</td>
-                <td>${a.status_aprovacao}</td>
-                <td>${new Date(a.criado_em).toLocaleString()}</td>
-                <td class="actions">
-                    <button class="edit" onclick="editar(${a.id})">Editar</button>
-                    <button class="delete" onclick="deletar(${a.id})">Apagar</button>
-                </td>
-            </tr>`;
-        });
-    } catch(err){ console.error("Erro ao listar assistências:", err); }
+
+const dados = await fetchComErro(`${API}/assistencias-direcao/`)
+
+const tbody = document.getElementById("assistenciasBody")
+
+tbody.innerHTML=""
+
+dados.forEach(a=>{
+
+tbody.innerHTML += `
+
+<tr>
+
+<td>${a.id}</td>
+<td>${a.professor_assistido_nome}</td>
+<td>${a.diretor_assistente_nome}</td>
+<td>${a.classe}</td>
+<td>${a.turma}</td>
+<td>${a.disciplina}</td>
+<td>${a.numero_sala}</td>
+<td>${a.localizacao_sala}</td>
+<td>${a.trimestre}</td>
+<td>${new Date(a.data_hora).toLocaleString()}</td>
+<td>${a.status_aprovacao}</td>
+<td>${new Date(a.criado_em).toLocaleString()}</td>
+
+<td class="actions">
+
+<button class="edit" onclick="editar(${a.id})">Editar</button>
+
+<button class="delete" onclick="deletar(${a.id})">Apagar</button>
+
+</td>
+
+</tr>
+
+`
+
+})
+
 }
 
-// ===== SALVAR / ATUALIZAR =====
+
+/* ================================
+   SALVAR
+================================ */
+
 async function salvar(e){
-    e.preventDefault();
-    const id = document.getElementById("assistenciaId").value;
-    const dados = {
-        professor_assistido_nome: document.getElementById("professor_assistido_nome").value,
-        diretor_assistente_nome: document.getElementById("diretor_assistente_nome").value,
-        classe: document.getElementById("classe").value,
-        turma: document.getElementById("turma").value,
-        disciplina: document.getElementById("disciplina").value,
-        numero_sala: document.getElementById("numero_sala").value,
-        localizacao_sala: document.getElementById("localizacao_sala").value,
-        trimestre: document.getElementById("trimestre").value,
-        data_hora: document.getElementById("data_hora").value.replace("T"," "),
-        status_aprovacao: "NAO"
-    };
-    try {
-        if(id){
-            await fetchComErro(`${API}/assistencias-direcao/id/${parseInt(id)}`, {
-                method: "PUT",
-                headers: {"Content-Type":"application/json"},
-                body: JSON.stringify(dados)
-            });
-            exibirMensagem("Assistência atualizada com sucesso!", "sucesso");
-        } else {
-            await fetchComErro(`${API}/assistencias-direcao/`, {
-                method: "POST",
-                headers: {"Content-Type":"application/json"},
-                body: JSON.stringify(dados)
-            });
-            exibirMensagem("Assistência salva com sucesso!", "sucesso");
-        }
-        document.getElementById("formAssistencia").reset();
-        document.getElementById("assistenciaId").value="";
-        listar();
-    } catch(err){ console.error("Erro ao salvar/atualizar:", err); exibirMensagem("Ocorreu um erro ao salvar a assistência.", "erro"); }
+
+e.preventDefault()
+
+const id = document.getElementById("assistenciaId").value
+
+const dados={
+
+professor_assistido_nome:document.getElementById("professor_assistido_nome").value,
+
+diretor_assistente_nome:document.getElementById("diretor_assistente_nome").value,
+
+classe:document.getElementById("classe").value,
+
+turma:document.getElementById("turma").value,
+
+disciplina:document.getElementById("disciplina").value,
+
+numero_sala:document.getElementById("numero_sala").value,
+
+localizacao_sala:document.getElementById("localizacao_sala").value,
+
+trimestre:document.getElementById("trimestre").value,
+
+data_hora:document.getElementById("data_hora").value.replace("T"," "),
+
+status_aprovacao:"NAO"
+
 }
 
-// ===== EDITAR =====
+if(id){
+
+await fetchComErro(`${API}/assistencias-direcao/id/${id}`,{
+
+method:"PUT",
+
+headers:{"Content-Type":"application/json"},
+
+body:JSON.stringify(dados)
+
+})
+
+exibirMensagem("Assistência atualizada","sucesso")
+
+}
+
+else{
+
+await fetchComErro(`${API}/assistencias-direcao/`,{
+
+method:"POST",
+
+headers:{"Content-Type":"application/json"},
+
+body:JSON.stringify(dados)
+
+})
+
+exibirMensagem("Assistência salva","sucesso")
+
+}
+
+document.getElementById("formAssistencia").reset()
+
+listar()
+
+}
+
+
+/* ================================
+   EDITAR
+================================ */
+
 async function editar(id){
-    try {
-        const a = await fetchComErro(`${API}/assistencias-direcao/id/${parseInt(id)}`);
-        document.getElementById("assistenciaId").value = a.id;
-        document.getElementById("professor_assistido_nome").value = a.professor_assistido_nome;
-        document.getElementById("diretor_assistente_nome").value = a.diretor_assistente_nome;
-        document.getElementById("classe").value = a.classe;
-        document.getElementById("turma").value = a.turma;
-        document.getElementById("disciplina").value = a.disciplina;
-        document.getElementById("numero_sala").value = a.numero_sala;
-        document.getElementById("localizacao_sala").value = a.localizacao_sala;
-        document.getElementById("trimestre").value = a.trimestre;
-        document.getElementById("data_hora").value = a.data_hora.slice(0,16);
-    } catch(err){ console.error("Erro ao carregar assistência para editar:", err); exibirMensagem("Erro ao carregar os dados para edição.", "erro"); }
+
+const a = await fetchComErro(`${API}/assistencias-direcao/id/${id}`)
+
+document.getElementById("assistenciaId").value=a.id
+
+document.getElementById("professor_assistido_nome").value=a.professor_assistido_nome
+
+document.getElementById("diretor_assistente_nome").value=a.diretor_assistente_nome
+
+document.getElementById("classe").value=a.classe
+
+document.getElementById("turma").value=a.turma
+
+document.getElementById("disciplina").value=a.disciplina
+
+document.getElementById("numero_sala").value=a.numero_sala
+
+document.getElementById("localizacao_sala").value=a.localizacao_sala
+
+document.getElementById("trimestre").value=a.trimestre
+
+document.getElementById("data_hora").value=a.data_hora.slice(0,16)
+
 }
 
-// ===== DELETAR =====
+
+/* ================================
+   DELETAR
+================================ */
+
 async function deletar(id){
-    try {
-        // Removendo a confirmação, a assistência será apagada diretamente
-        await fetchComErro(`${API}/assistencias-direcao/id/${parseInt(id)}`, { method: "DELETE" });
-        exibirMensagem("Assistência apagada com sucesso!", "sucesso");
-        listar();
-    } catch(err) {
-        console.error("Erro ao deletar assistência:", err);
-        exibirMensagem("Ocorreu um erro ao apagar a assistência.", "erro");
-    }
+
+await fetchComErro(`${API}/assistencias-direcao/id/${id}`,{
+
+method:"DELETE"
+
+})
+
+exibirMensagem("Assistência apagada","sucesso")
+
+listar()
+
 }
 
-// ===== ALTERAR STATUS GLOBAL DO TRIMESTRE =====
-async function alterarStatusTrimestreGlobal(trimestre, checked){
-    const status = checked ? "APROVADO" : "NAO";
-    try{
-        await fetchComErro(`${API}/assistencias-direcao/aprovar-trimestre`, {
-            method: "PUT",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ trimestre: trimestre.toString(), status: status })
-        });
-        exibirMensagem("Status global do trimestre alterado com sucesso!", "sucesso");
-        listar();
-    } catch(err){ console.error("Erro ao alterar status global:", err); exibirMensagem("Erro ao alterar status global.", "erro"); }
+
+/* ================================
+   STATUS TRIMESTRE
+================================ */
+
+async function alterarStatusTrimestreGlobal(trimestre,checked){
+
+const status = checked ? "APROVADO":"NAO"
+
+await fetchComErro(`${API}/assistencias-direcao/aprovar-trimestre`,{
+
+method:"PUT",
+
+headers:{"Content-Type":"application/json"},
+
+body:JSON.stringify({
+
+trimestre:trimestre.toString(),
+
+status:status
+
+})
+
+})
+
+listar()
+
 }
 
-// ===== INICIALIZAÇÃO =====
-document.getElementById("formAssistencia").addEventListener("submit", salvar);
-carregarProfessores();
-carregarDiretores();
-listar();
+
+/* ================================
+   INICIAR
+================================ */
+
+document.getElementById("formAssistencia").addEventListener("submit",salvar)
+
+carregarProfessores()
+
+carregarDiretores()
+
+listar()
+
 </script>
 
 </body>
