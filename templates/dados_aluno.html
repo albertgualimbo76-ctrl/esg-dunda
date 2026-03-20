@@ -15,8 +15,26 @@ body{display:flex;background:#f1f5f9;}
     background:linear-gradient(180deg,#06b6d4,#22c55e);
     color:white;
     padding:25px;
+    position:relative;
 }
-.logo{font-size:22px;font-weight:bold;margin-bottom:40px;}
+
+/* BOTÃO VOLTAR */
+.back-btn{
+    position:absolute;
+    top:15px;
+    left:15px;
+    font-size:20px;
+    cursor:pointer;
+    background:rgba(255,255,255,0.2);
+    padding:6px 10px;
+    border-radius:8px;
+    transition:0.3s;
+}
+.back-btn:hover{
+    background:rgba(255,255,255,0.4);
+}
+
+.logo{font-size:22px;font-weight:bold;margin:40px 0 40px 0;}
 
 .menu{display:flex;flex-direction:column;gap:12px;}
 .menu a{
@@ -64,7 +82,7 @@ button:disabled{
     cursor:not-allowed;
 }
 
-/* CÉLULAS EDITÁVEIS */
+/* EDITÁVEL */
 .editavel{
     background:#fff7cc;
     outline:2px solid #facc15;
@@ -102,10 +120,13 @@ button:disabled{
 
 <!-- SIDEBAR -->
 <div class="sidebar">
+
+    <!-- BOTÃO VOLTAR -->
+    <div class="back-btn" onclick="voltarPagina()">⬅️</div>
+
     <div class="logo">🏫 Phandira-2</div>
 
     <div class="menu">
-
         <a onclick="toggleSubmenu()">Seleccione uma opcao ▾</a>
 
         <div id="submenuAlunos" class="submenu">
@@ -149,7 +170,7 @@ button:disabled{
     </div>
 </div>
 
-<!-- MODAL CADASTRO -->
+<!-- MODAL -->
 <div id="modalCadastro" class="modal">
     <div class="modal-content">
         <h3>Cadastrar Aluno</h3>
@@ -170,6 +191,11 @@ button:disabled{
 <script>
 document.getElementById("year").textContent=new Date().getFullYear();
 
+/* VOLTAR */
+function voltarPagina(){
+    window.history.back();
+}
+
 /* SUBMENU */
 function toggleSubmenu(){
     const s=document.getElementById("submenuAlunos");
@@ -181,21 +207,13 @@ function mostrarArea(){
     document.getElementById("areaConteudo").style.display="block";
 }
 
-/* AGUARDE GLOBAL */
-function mostrarAguarde(){
-    msgAguarde.style.display="block";
-}
-function esconderAguarde(){
-    msgAguarde.style.display="none";
-}
+/* AGUARDE */
+function mostrarAguarde(){ msgAguarde.style.display="block"; }
+function esconderAguarde(){ msgAguarde.style.display="none"; }
 
 /* MODAL */
-function abrirCadastro(){
-    modalCadastro.style.display="flex";
-}
-function fecharModal(){
-    modalCadastro.style.display="none";
-}
+function abrirCadastro(){ modalCadastro.style.display="flex"; }
+function fecharModal(){ modalCadastro.style.display="none"; }
 
 /* FORMATAR DATA */
 function formatarData(dataISO){
@@ -203,11 +221,9 @@ function formatarData(dataISO){
     return `${dia}/${mes}/${ano}`;
 }
 
-/* ===================== CADASTRAR ===================== */
+/* CADASTRAR */
 async function cadastrarAluno(btn){
-
     const texto=btn.textContent;
-
     btn.textContent="Aguarde...";
     btn.disabled=true;
 
@@ -227,22 +243,18 @@ async function cadastrarAluno(btn){
     btn.disabled=false;
 
     if(res.ok){
-
         nome.value="";
         data.value="";
         sexo.value="M";
-
         fecharModal();
         listarAlunos();
-
     }else{
         alert("Erro ao cadastrar aluno");
     }
 }
 
-/* ===================== LISTAR ===================== */
+/* LISTAR */
 async function listarAlunos(){
-
     mostrarArea();
     mostrarAguarde();
 
@@ -256,9 +268,8 @@ async function listarAlunos(){
     alunos.forEach(adicionarNaTabela);
 }
 
-/* ===================== BUSCAR ID ===================== */
+/* BUSCAR */
 async function buscarPorID(){
-
     const id=prompt("Digite o ID:");
     if(!id) return;
 
@@ -281,9 +292,8 @@ async function buscarPorID(){
     adicionarNaTabela(aluno);
 }
 
-/* ===================== ADICIONAR LINHA ===================== */
+/* ADICIONAR LINHA */
 function adicionarNaTabela(a){
-
     const tr=document.createElement("tr");
 
     tr.innerHTML=`
@@ -300,9 +310,8 @@ function adicionarNaTabela(a){
     document.querySelector("#tabelaAlunos tbody").appendChild(tr);
 }
 
-/* ===================== EDITAR ===================== */
+/* EDITAR */
 function editarLinha(btn,id){
-
     const tr=btn.parentElement.parentElement;
     const tds=tr.querySelectorAll("td");
 
@@ -325,9 +334,8 @@ function editarLinha(btn,id){
     btn.onclick=()=>salvarEdicao(btn,tr,id);
 }
 
-/* ===================== SALVAR EDIÇÃO ===================== */
+/* SALVAR */
 async function salvarEdicao(btn,tr,id){
-
     const texto=btn.textContent;
     btn.textContent="Aguarde...";
     btn.disabled=true;
@@ -341,11 +349,7 @@ async function salvarEdicao(btn,tr,id){
 
     const sexo=tds[3].querySelector("select").value;
 
-    const aluno={
-        nome:nome,
-        data_nascimento:dataISO,
-        sexo:sexo
-    };
+    const aluno={ nome,data_nascimento:dataISO,sexo };
 
     const res=await fetch(`/alunos/${id}`,{
         method:"PUT",
@@ -360,9 +364,8 @@ async function salvarEdicao(btn,tr,id){
     else alert("Erro ao atualizar");
 }
 
-/* ===================== APAGAR ===================== */
+/* APAGAR */
 async function apagarAluno(id){
-
     if(!confirm("Deseja apagar?")) return;
 
     const res=await fetch(`/alunos/${id}`,{method:"DELETE"});

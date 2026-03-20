@@ -12,6 +12,25 @@ body {
     padding:0;
 }
 
+/* BOTÃO VOLTAR */
+.back-btn{
+    position:fixed;
+    top:20px;
+    left:20px;
+    font-size:20px;
+    cursor:pointer;
+    background:#06b6d4;
+    color:white;
+    padding:8px 12px;
+    border-radius:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    transition:.3s;
+    z-index:1000;
+}
+.back-btn:hover{
+    background:#0891b2;
+}
+
 .container {
     max-width:900px;
     margin:50px auto;
@@ -39,6 +58,8 @@ textarea, input[type="text"] {
     border-radius:6px;
     border:1px solid #cbd5e1;
     margin-bottom:10px;
+    font-family:inherit;
+    font-size:14px;
 }
 
 textarea {
@@ -70,6 +91,9 @@ button:disabled {
 </head>
 <body>
 
+<!-- BOTÃO VOLTAR -->
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
+
 <div class="container">
 
 <h1>Enviar SMS</h1>
@@ -99,24 +123,26 @@ button:disabled {
 
 <script>
 
+// BOTÃO VOLTAR
+function voltarPagina(){
+    window.history.back();
+}
+
 // URL dinâmica (local e Render)
 const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
     ? "http://127.0.0.1:8000"
     : window.location.origin;
 
-// Função para remover acentos e caracteres especiais
-function normalizeText(str) {
-    return str
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-zA-Z0-9 .,!?@-]/g, "");
+// Remover apenas acentos, mantendo pontuação, números, letras e quebras de linha
+function removerAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 // Normalização em tempo real do input
 function attachNormalization(inputElement) {
     inputElement.addEventListener("input", () => {
-        const pos = inputElement.selectionStart; // mantém posição do cursor
-        inputElement.value = normalizeText(inputElement.value);
+        const pos = inputElement.selectionStart;
+        inputElement.value = removerAcentos(inputElement.value);
         inputElement.setSelectionRange(pos, pos);
     });
 }
@@ -142,7 +168,7 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
     statusMsg.innerText = "A preparar envio...";
 
     const tipos = getTiposSelecionados();
-    const mensagem = document.getElementById("mensagem").value.trim();
+    const mensagem = document.getElementById("mensagem").value; // mantém parágrafos
     const contactosExtrasInput = document.getElementById("contactosExtras").value.trim();
 
     let numeros = [];
@@ -193,7 +219,7 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
 
             const payload = {
                 sender_id: "ESG-DUNDA",
-                mensagem: mensagem,
+                mensagem: mensagem, // mantém parágrafos
                 numeros: [numero]
             };
 

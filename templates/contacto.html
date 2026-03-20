@@ -3,8 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <title>Gestão de Contactos</title>
+
 <style>
 body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
+
+/* BOTÃO VOLTAR */
+.back-btn{
+position:fixed;
+top:20px;
+left:20px;
+font-size:20px;
+cursor:pointer;
+background:#06b6d4;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+transition:.3s;
+z-index:1000;
+}
+.back-btn:hover{
+background:#0891b2;
+}
+
 .container { max-width:1200px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); overflow-x:auto; }
 h1 { text-align:center; margin-bottom:20px; color:#0f172a; }
 form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:30px; }
@@ -20,7 +41,7 @@ table th { background:#06b6d4; color:white; }
 .actions .edit { background:#22c55e; color:white; }
 .actions .delete { background:#ef4444; color:white; }
 
-/* Estilo para mensagens */
+/* MENSAGEM */
 #mensagem {
     display: none;
     padding: 10px;
@@ -32,15 +53,17 @@ table th { background:#06b6d4; color:white; }
 }
 </style>
 </head>
+
 <body>
+
+<!-- BOTÃO VOLTAR -->
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
 
 <div class="container">
     <h1>Adicionar/Atualizar/Apagar Contactos</h1>
 
-    <!-- Div para exibir mensagens -->
     <div id="mensagem"></div>
 
-    <!-- FORMULÁRIO -->
     <form id="formContacto">
         <input type="hidden" id="contactoId" value="">
         <div class="checkbox-group">
@@ -55,7 +78,6 @@ table th { background:#06b6d4; color:white; }
         <button type="submit">Salvar</button>
     </form>
 
-    <!-- TABELA DE CONTACTOS -->
     <table>
         <thead>
             <tr>
@@ -71,56 +93,62 @@ table th { background:#06b6d4; color:white; }
 </div>
 
 <script>
-const API_BASE = ""; // base da API
 
-// ==========================
-// FUNÇÕES AUXILIARES
-// ==========================
+/* BOTÃO VOLTAR */
+function voltarPagina(){
+    window.history.back();
+}
 
-// Exibir mensagens na página
+const API_BASE = "";
+
+/* MENSAGEM */
 function exibirMensagem(mensagem, tipo = "erro") {
     const mensagemDiv = document.getElementById("mensagem");
     mensagemDiv.style.display = "block";
     mensagemDiv.textContent = mensagem;
+
     if (tipo === "erro") {
         mensagemDiv.style.backgroundColor = "#f8d7da";
         mensagemDiv.style.color = "#721c24";
-        mensagemDiv.style.border = "1px solid #f5c6cb";
-    } else if (tipo === "sucesso") {
+    } else {
         mensagemDiv.style.backgroundColor = "#d4edda";
         mensagemDiv.style.color = "#155724";
-        mensagemDiv.style.border = "1px solid #c3e6cb";
     }
 }
 
-// Remove acentos e caracteres especiais
+/* REMOVER ACENTOS */
 function removerAcentos(texto) {
-    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "");
+    return texto.normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, "");
 }
 
-// Reset form
+/* RESET */
 function resetForm() {
     document.getElementById("formContacto").reset();
     document.getElementById("contactoId").value = "";
 }
 
-// Pega tipos selecionados
+/* TIPOS */
 function getTiposSelecionados() {
-    return Array.from(document.querySelectorAll('input[name="tipo"]:checked')).map(cb => cb.value);
+    return Array.from(document.querySelectorAll('input[name="tipo"]:checked'))
+    .map(cb => cb.value);
 }
 
-// ==========================
-// LISTAR CONTACTOS
-// ==========================
+/* LISTAR */
 async function listarContactos() {
     const tbody = document.getElementById("contactosBody");
     tbody.innerHTML = "";
-    const tipos = ["diretor", "direcao", "professores", "funcionarios"];
+
+    const tipos = ["diretor","direcao","professores","funcionarios"];
+
     for (const tipo of tipos) {
         const res = await fetch(`${API_BASE}/contactos/${tipo}`);
         const dados = await res.json();
+
         dados.forEach(c => {
             const tr = document.createElement("tr");
+
             tr.innerHTML = `
                 <td>${c.id}</td>
                 <td>${tipo}</td>
@@ -131,103 +159,89 @@ async function listarContactos() {
                     <button class="delete" onclick="deletar('${tipo}', ${c.id})">Apagar</button>
                 </td>
             `;
+
             tbody.appendChild(tr);
         });
     }
 }
 
-// ==========================
-// CRIAR OU ATUALIZAR CONTACTO
-// ==========================
+/* SALVAR */
 async function criarOuAtualizarContacto(e) {
     e.preventDefault();
+
     const id = document.getElementById("contactoId").value;
     const tipos = getTiposSelecionados();
+
     let nome = removerAcentos(document.getElementById("nome").value.trim());
     let telefone = document.getElementById("telefone").value.trim();
 
     if (!nome || !telefone || tipos.length === 0) {
-        exibirMensagem("Preencha todos os campos corretamente", "erro");
+        exibirMensagem("Preencha todos os campos corretamente");
         return;
     }
 
     if (!/^\d{9}$/.test(telefone)) {
-        exibirMensagem("Telefone deve ter exatamente 9 dígitos", "erro");
+        exibirMensagem("Telefone deve ter 9 dígitos");
         return;
     }
 
     telefone = "258" + telefone;
+
     const dados = { nome, telefone };
 
     for (const tipo of tipos) {
-        try {
-            if (id) {
-                await fetch(`${API_BASE}/contactos/${tipo}/${id}`, {
-                    method: "PUT",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(dados)
-                });
-            } else {
-                await fetch(`${API_BASE}/contactos/${tipo}`, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    body: JSON.stringify(dados)
-                });
-            }
-            exibirMensagem("Contacto salvo com sucesso!", "sucesso");
-        } catch (err) {
-            console.error("Erro ao salvar contacto:", err);
-            exibirMensagem("Erro ao salvar o contacto", "erro");
+        if (id) {
+            await fetch(`${API_BASE}/contactos/${tipo}/${id}`,{
+                method:"PUT",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify(dados)
+            });
+        } else {
+            await fetch(`${API_BASE}/contactos/${tipo}`,{
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body:JSON.stringify(dados)
+            });
         }
     }
 
+    exibirMensagem("Contacto salvo com sucesso!","sucesso");
     resetForm();
     listarContactos();
 }
 
-// ==========================
-// EDITAR CONTACTO
-// ==========================
-async function editar(tipo, id) {
+/* EDITAR */
+async function editar(tipo,id){
     const res = await fetch(`${API_BASE}/contactos/${tipo}`);
     const dados = await res.json();
-    const c = dados.find(item => item.id === id);
-    if (!c) return;
+
+    const c = dados.find(x => x.id === id);
+
     document.getElementById("contactoId").value = c.id;
     document.getElementById("nome").value = c.nome;
-    document.getElementById("telefone").value = c.telefone.slice(3); // remove prefixo 258
-    // marca o checkbox do tipo
-    document.querySelectorAll('input[name="tipo"]').forEach(cb => cb.checked = cb.value === tipo);
+    document.getElementById("telefone").value = c.telefone.slice(3);
+
+    document.querySelectorAll('input[name="tipo"]').forEach(cb=>{
+        cb.checked = cb.value === tipo;
+    });
 }
 
-// ==========================
-// DELETAR CONTACTO
-// ==========================
-async function deletar(tipo, id) {
-    try {
-        await fetch(`${API_BASE}/contactos/${tipo}/${id}`, { method: "DELETE" });
-        exibirMensagem("Contacto apagado com sucesso!", "sucesso");
-        listarContactos();
-    } catch (err) {
-        console.error("Erro ao deletar contacto:", err);
-        exibirMensagem("Erro ao apagar o contacto", "erro");
-    }
+/* DELETAR */
+async function deletar(tipo,id){
+    await fetch(`${API_BASE}/contactos/${tipo}/${id}`,{method:"DELETE"});
+    exibirMensagem("Contacto apagado com sucesso!","sucesso");
+    listarContactos();
 }
 
-// ==========================
-// EVENTOS
-// ==========================
+/* EVENTOS */
 document.getElementById("formContacto").addEventListener("submit", criarOuAtualizarContacto);
 
-// Remove acentos enquanto digita
-document.getElementById("nome").addEventListener("input", (e) => {
-    const cursorPos = e.target.selectionStart;
+document.getElementById("nome").addEventListener("input",(e)=>{
     e.target.value = removerAcentos(e.target.value);
-    e.target.setSelectionRange(cursorPos, cursorPos);
 });
 
-// Inicializa lista
 listarContactos();
+
 </script>
 
 </body>

@@ -4,8 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Assistências Mútuas</title>
+
 <style>
 body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
+
+/* BOTÃO VOLTAR */
+.back-btn{
+position:fixed;
+top:20px;
+left:20px;
+font-size:20px;
+cursor:pointer;
+background:#06b6d4;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+transition:.3s;
+z-index:1000;
+}
+.back-btn:hover{
+background:#0891b2;
+}
+
 .container { max-width:1400px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.1); overflow-x:auto; }
 h1 { text-align:center; margin-bottom:20px; color:#0f172a; }
 form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:20px; }
@@ -21,7 +42,7 @@ table th { background:#06b6d4; color:white; }
 .status-checkboxes { display:flex; gap:20px; margin-bottom:15px; }
 .status-checkboxes label { font-weight:bold; }
 
-/* Estilo para mensagens */
+/* MENSAGEM */
 #mensagem {
     display: none;
     padding: 10px;
@@ -33,12 +54,15 @@ table th { background:#06b6d4; color:white; }
 }
 </style>
 </head>
+
 <body>
 
-<div class="container">
-<h1>Planificar  Assistências Mútuas</h1>
+<!-- BOTÃO VOLTAR -->
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
 
-<!-- Div para exibir mensagens -->
+<div class="container">
+<h1>Planificar Assistências Mútuas</h1>
+
 <div id="mensagem"></div>
 
 <form id="formAssistencia">
@@ -86,46 +110,59 @@ table th { background:#06b6d4; color:white; }
 </div>
 
 <script>
-const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" ? "http://127.0.0.1:8000" : "https://esg-dunda.onrender.com";
 
-// Função para exibir mensagens
+/* BOTÃO VOLTAR */
+function voltarPagina(){
+    window.history.back();
+}
+
+const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+? "http://127.0.0.1:8000"
+: "https://esg-dunda.onrender.com";
+
+/* MENSAGEM */
 function exibirMensagem(mensagem, tipo = "erro") {
     const mensagemDiv = document.getElementById("mensagem");
     mensagemDiv.style.display = "block";
     mensagemDiv.textContent = mensagem;
+
     if (tipo === "erro") {
         mensagemDiv.style.backgroundColor = "#f8d7da";
         mensagemDiv.style.color = "#721c24";
-        mensagemDiv.style.border = "1px solid #f5c6cb";
-    } else if (tipo === "sucesso") {
+    } else {
         mensagemDiv.style.backgroundColor = "#d4edda";
         mensagemDiv.style.color = "#155724";
-        mensagemDiv.style.border = "1px solid #c3e6cb";
     }
 }
 
-// Carregar dropdown de professores
+/* DROPDOWN */
 async function carregarProfessores(){
     const res = await fetch(`${API}/assistencias/professores`);
     const dados = await res.json();
+
     const assistido = document.getElementById("professor_assistido_nome");
     const assistente = document.getElementById("professor_assistente_nome");
+
     assistido.innerHTML = '<option value="">Professor Assistido</option>';
     assistente.innerHTML = '<option value="">Professor Assistente</option>';
+
     dados.forEach(p => {
         assistido.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
         assistente.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
     });
 }
 
-// Listar assistências
+/* LISTAR */
 async function listar(){
     const res = await fetch(`${API}/assistencias/`);
     const dados = await res.json();
+
     const tbody = document.getElementById("assistenciasBody");
     tbody.innerHTML = "";
+
     dados.forEach(a => {
-        tbody.innerHTML += `<tr>
+        tbody.innerHTML += `
+        <tr>
             <td>${a.id}</td>
             <td>${a.professor_assistido_nome}</td>
             <td>${a.professor_assistente_nome}</td>
@@ -146,93 +183,85 @@ async function listar(){
     });
 }
 
-// Salvar ou atualizar
+/* SALVAR */
 async function salvar(e){
     e.preventDefault();
+
     const id = document.getElementById("assistenciaId").value;
-    const professorAssistidoId = document.getElementById("professor_assistido_nome").value;
-    const professorAssistenteId = document.getElementById("professor_assistente_nome").value;
-    const dataHora = document.getElementById("data_hora").value;
-    const formattedDate = dataHora.replace("T"," ");
+
     const dados = {
-        professor_assistido_id: Number(professorAssistidoId),
-        professor_assistente_id: Number(professorAssistenteId),
+        professor_assistido_id: Number(document.getElementById("professor_assistido_nome").value),
+        professor_assistente_id: Number(document.getElementById("professor_assistente_nome").value),
         classe: document.getElementById("classe").value,
         turma: document.getElementById("turma").value,
         disciplina: document.getElementById("disciplina").value,
         numero_sala: document.getElementById("numero_sala").value,
         localizacao_sala: document.getElementById("localizacao_sala").value,
         trimestre: document.getElementById("trimestre").value,
-        data_hora: formattedDate
+        data_hora: document.getElementById("data_hora").value.replace("T"," ")
     };
 
-    try {
-        if(id){
-            await fetch(`${API}/assistencias/id/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dados)
-            });
-            exibirMensagem("Assistência atualizada com sucesso!", "sucesso");
-        } else {
-            await fetch(`${API}/assistencias/`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(dados)
-            });
-            exibirMensagem("Assistência salva com sucesso!", "sucesso");
-        }
-        document.getElementById("formAssistencia").reset();
-        document.getElementById("assistenciaId").value = "";
-        listar();
-    } catch (err) {
-        console.error("Erro ao salvar assistência:", err);
-        exibirMensagem("Erro ao salvar assistência.", "erro");
+    if(id){
+        await fetch(`${API}/assistencias/id/${id}`,{
+            method:"PUT",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(dados)
+        });
+        exibirMensagem("Atualizado com sucesso","sucesso");
+    }else{
+        await fetch(`${API}/assistencias/`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(dados)
+        });
+        exibirMensagem("Salvo com sucesso","sucesso");
     }
+
+    document.getElementById("formAssistencia").reset();
+    listar();
 }
 
-// Editar
+/* EDITAR */
 async function editar(id){
     const res = await fetch(`${API}/assistencias/id/${id}`);
     const a = await res.json();
+
     document.getElementById("assistenciaId").value = a.id;
-    document.getElementById("professor_assistido_nome").value = a.professor_assistido_nome;
-    document.getElementById("professor_assistente_nome").value = a.professor_assistente_nome;
+    document.getElementById("professor_assistido_nome").value = a.professor_assistido_id;
+    document.getElementById("professor_assistente_nome").value = a.professor_assistente_id;
     document.getElementById("classe").value = a.classe;
     document.getElementById("turma").value = a.turma;
     document.getElementById("disciplina").value = a.disciplina;
     document.getElementById("numero_sala").value = a.numero_sala;
     document.getElementById("localizacao_sala").value = a.localizacao_sala;
     document.getElementById("trimestre").value = a.trimestre;
-    document.getElementById("data_hora").value = a.data_hora.slice(0, 16);
+    document.getElementById("data_hora").value = a.data_hora.slice(0,16);
 }
 
-// Deletar
+/* DELETAR */
 async function deletar(id){
-    await fetch(`${API}/assistencias/id/${id}`, { method: "DELETE" });
-    exibirMensagem("Assistência apagada com sucesso!", "sucesso");
+    await fetch(`${API}/assistencias/id/${id}`,{method:"DELETE"});
+    exibirMensagem("Apagado com sucesso","sucesso");
     listar();
 }
 
-// Aprovar/Desaprovar trimestre
+/* STATUS */
 async function alterarStatusTrimestre(trimestre, checked){
-    const status = checked ? "APROVADO" : "NAO";
+    const status = checked ? "APROVADO":"NAO";
+
     const url = new URL(`${API}/assistencias/aprovar-trimestre`);
-    url.searchParams.append("trimestre", trimestre.toString());
+    url.searchParams.append("trimestre", trimestre);
     url.searchParams.append("status", status);
-    const res = await fetch(url, { method: "PUT" });
-    if (!res.ok) {
-        console.error("Erro ao alterar status:", await res.text());
-        exibirMensagem("Erro ao alterar status do trimestre", "erro");
-    } else {
-        exibirMensagem("Status do trimestre alterado com sucesso!", "sucesso");
-        listar();
-    }
+
+    await fetch(url,{method:"PUT"});
+    listar();
 }
 
+/* INICIAR */
 document.getElementById("formAssistencia").addEventListener("submit", salvar);
 carregarProfessores();
 listar();
+
 </script>
 
 </body>
