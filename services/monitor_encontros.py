@@ -164,11 +164,11 @@ async def monitorar_encontros():
                         numeros_convocatoria = await pegar_numeros("professores")
 
                         mensagem_convocatoria = (
-                            f"Saudacoes prezados colegas, a direccao da ESG 1^2 de Dunda "
+                            f"Saudacoes prezados colegas, a direccao da ESG 1 e 2 de Dunda "
                             f"convoca todos os professores para reuniao referente a "
                             f"{encontro.titulo}, amanha dia "
                             f"{encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h, "
-                            f"na sala numero 5. Pede-se pontualidade. "
+                            f"na sala de reuniao. Pede-se pontualidade. "
                             f"Do: Sector Pedagogico"
                         )
 
@@ -176,11 +176,11 @@ async def monitorar_encontros():
                         numeros_convocatoria = await pegar_numeros("funcionarios")
 
                         mensagem_convocatoria = (
-                            f"Saudacoes, a direccao da ESG 1^2 de Dunda convoca todos os "
+                            f"Saudacoes, a direccao da ESG 1 e 2 de Dunda convoca todos os "
                             f"funcionarios para reuniao referente a {encontro.titulo}, "
                             f"amanha dia "
                             f"{encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h, "
-                            f"na sala numero 5. Pede-se pontualidade. "
+                            f"na sala de reuniao. Pede-se pontualidade. "
                             f"DE: Alberto Luis Gualimbo"
                         )
 
