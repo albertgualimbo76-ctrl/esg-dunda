@@ -69,6 +69,12 @@ body{display:flex;background:#f1f5f9;}
     z-index:2;
 }
 
+.topbar span{
+    color: #06b6d4;
+    font-weight: bold;
+    font-size: 18px;
+}
+
 /* ÁREA CENTRAL */
 .painel{
     flex:1;
@@ -163,14 +169,11 @@ body{display:flex;background:#f1f5f9;}
     <div class="logo">🏫 ESG-DUNDA</div>
 
     <div class="menu">
-
-
         <a onclick="criarContacto()">Gerenciar contactos-SMS</a>
         <a onclick="agendarEncontros()">Agendar encontros-SMS</a>
         <a onclick="criarInformacoes()">Enviar outras informacoes-SMS</a>
         <a onclick="criarAssistencias()">Fazer Plano de assistencias mútuas</a>
         <a onclick="criarAss_direccao()">Fazer Plano de assistencias de direccao</a>
-
     </div>
 </div>
 
@@ -178,8 +181,10 @@ body{display:flex;background:#f1f5f9;}
 <div class="main">
 
     <div class="topbar">
-        <h3>ESG-DUNDA</h3>
-        <strong>👤 Usuário</strong>
+
+        <div>
+            <span id="smsCount"></span>
+        </div>
     </div>
 
     <!-- FUNDO ANIMADO -->
@@ -202,10 +207,59 @@ body{display:flex;background:#f1f5f9;}
     <div class="footer">
         © <span id="year"></span> Proempy Services
     </div>
-
 </div>
 
 <script>
+// Função para consultar o saldo na API
+async function consultarSaldo() {
+    const url = "https://api.mozesms.com/v1/account/balance"; // Requisição para a API de SMS
+    const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
+
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Erro ao consultar saldo');
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            const saldo = data.data.balance; // Valor do saldo retornado pela API
+            const smsEquivalentes = calcularSmsEquivalentes(saldo);
+            mostrarSmsEquivalentes(smsEquivalentes);
+        } else {
+            throw new Error('Falha ao obter o saldo');
+        }
+
+    } catch (error) {
+        document.getElementById('smsCount').textContent = `Erro: ${error.message}`;
+    }
+}
+
+// Função para calcular os SMS equivalentes
+function calcularSmsEquivalentes(saldo) {
+    // Preço de 71 SMS para 98.85 MT
+    const smsPorValor = 71 / 98.85;
+    return saldo * smsPorValor;
+}
+
+// Função para mostrar o SMS na área
+function mostrarSmsEquivalentes(smsEquivalentes) {
+    const smsCountElement = document.getElementById('smsCount');
+    smsCountElement.textContent = `Disponíveis: ${smsEquivalentes.toFixed()} SMS`;
+
+    if (smsEquivalentes <= 100) {
+        smsCountElement.innerHTML += `<br><span style="color:red;"> Seus SMS estão acabando! <a href="https://mozesms.com" target="_blank">Clica aqui para recarregue sua conta</a></span>`;
+    }
+}
+
+// Funções de navegação
 document.getElementById("year").textContent =
 new Date().getFullYear();
 
@@ -237,6 +291,9 @@ function criarAssistencias(){
 function criarAss_direccao(){
     window.location.href = "/ass_direccao";
 }
+
+// Iniciar consulta ao saldo assim que a página for carregada
+window.onload = consultarSaldo;
 </script>
 
 </body>
