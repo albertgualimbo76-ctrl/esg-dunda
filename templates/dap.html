@@ -36,8 +36,14 @@ body{display:flex;background:#f1f5f9;}
 
 .logo{font-size:22px;font-weight:bold;margin:40px 0 40px 0;}
 
-.menu{display:flex;flex-direction:column;gap:12px;}
+/* Menu */
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
 
+/* Itens do menu */
 .menu a{
     text-decoration:none;
     color:white;
@@ -67,12 +73,6 @@ body{display:flex;background:#f1f5f9;}
     padding:0 30px;
     box-shadow:0 2px 8px rgba(0,0,0,0.05);
     z-index:2;
-}
-
-.topbar span{
-    color: #06b6d4;
-    font-weight: bold;
-    font-size: 18px;
 }
 
 /* ÁREA CENTRAL */
@@ -155,6 +155,28 @@ body{display:flex;background:#f1f5f9;}
     text-align:right;
     z-index:2;
 }
+
+/* Estilo para o contador de SMS */
+#smsCount {
+    color: #475569; /* cor padrão */
+    font-weight: bold;
+    font-size: 16px;
+    text-align: right;
+    display: inline-block;
+    margin-top: 20px;
+    position: absolute;
+    right: 30px;
+    top: 0px;
+}
+
+/* Estilo para o "Recarregar" */
+.recarregar {
+    color: red; /* Vermelho */
+    font-weight: bold;
+    text-decoration: none; /* Remover sublinhado */
+    cursor: pointer;
+    font-size: 16px;
+}
 </style>
 </head>
 
@@ -181,9 +203,13 @@ body{display:flex;background:#f1f5f9;}
 <div class="main">
 
     <div class="topbar">
+        <div></div> <!-- Aqui ficará o título da topbar ou qualquer outro conteúdo -->
 
-        <div>
-            <span id="smsCount"></span>
+        <!-- Colocando o saldo de SMS e recarga no lado direito da topbar -->
+        <div id="smsCount">
+            <span id="smsText">Saldo SMS: Carregando...</span>
+            <br>
+            <a id="recarregarLink" class="recarregar" href="https://mozesms.com" target="_blank">Recarregar</a>
         </div>
     </div>
 
@@ -238,7 +264,7 @@ async function consultarSaldo() {
         }
 
     } catch (error) {
-        document.getElementById('smsCount').textContent = `Erro: ${error.message}`;
+        document.getElementById('smsText').textContent = `Erro: ${error.message}`;
     }
 }
 
@@ -251,11 +277,15 @@ function calcularSmsEquivalentes(saldo) {
 
 // Função para mostrar o SMS na área
 function mostrarSmsEquivalentes(smsEquivalentes) {
-    const smsCountElement = document.getElementById('smsCount');
-    smsCountElement.textContent = `Disponíveis: ${smsEquivalentes.toFixed()} SMS`;
+    const smsTextElement = document.getElementById('smsText');
+    smsTextElement.textContent = `Saldo SMS: ${smsEquivalentes.toFixed()}`;
 
+    // Se o saldo for baixo, mostrar "Recarregar" em vermelho
     if (smsEquivalentes <= 100) {
-        smsCountElement.innerHTML += `<br><span style="color:red;"> Seus SMS estão acabando! <a href="https://mozesms.com" target="_blank">Clica aqui para recarregue sua conta</a></span>`;
+        const recarregarLink = document.getElementById('recarregarLink');
+        recarregarLink.style.display = 'inline'; // Mostrar o link para recarregar
+    } else {
+        document.getElementById('recarregarLink').style.display = 'none'; // Esconder caso o saldo seja suficiente
     }
 }
 
