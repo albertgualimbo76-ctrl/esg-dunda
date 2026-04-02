@@ -1,3 +1,4 @@
+import os
 import asyncio
 from datetime import datetime, timedelta
 import httpx
@@ -5,7 +6,6 @@ from sqlalchemy import select, update
 from database import SessionLocal
 from models.encontro import Encontro
 from routers.contactos import tipo_tabela
-import os
 
 # Intervalo de verificação do loop (em segundos)
 INTERVALO_VERIFICACAO = 30
@@ -16,10 +16,7 @@ INTERVALO_VERIFICACAO = 30
 # ==========================
 async def enviar_sms_api(mensagem, numeros):
 
-    base_url = os.getenv("RENDER_EXTERNAL_URL")
-    if not base_url:
-        base_url = "http://127.0.0.1:8000"
-
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://127.0.0.1:8000")
     url = f"{base_url}/sms/enviar"
 
     # Garantir que é lista
@@ -77,6 +74,15 @@ async def monitorar_encontros():
     while True:
 
         agora = datetime.now()
+
+        # Calcula o tempo até o início da próxima hora
+        proxima_hora = (agora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
+        tempo_ate_proxima_hora = (proxima_hora - agora).total_seconds()
+
+        print(f"\n📅 Verificando encontros em {agora}. Próxima verificação às {proxima_hora}")
+
+        # Espera até o início da próxima hora
+        await asyncio.sleep(tempo_ate_proxima_hora)
 
         async with SessionLocal() as db:
 
@@ -225,4 +231,18 @@ async def monitorar_encontros():
                     else:
                         print("⚠️ Nem todos SMS foram enviados")
 
-        await asyncio.sleep(INTERVALO_VERIFICACAO)
+        # Espera próximo ciclo até o início da próxima hora
+        await asyncio.sleep(tempo_ate_proxima_hora)
+
+
+# ==========================
+# Inicializa o monitor
+# ==========================
+async def main():
+
+    await monitorar_encontros()
+
+
+if __name__ == "__main__":
+
+    asyncio.run(main())

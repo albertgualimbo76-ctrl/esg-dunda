@@ -8,10 +8,6 @@ from models.assistencia_direcao import AssistenciaDirecao
 from models.contactos_professores import ContactoProfessor
 from models.contactos_diretor import ContactoDiretor
 
-# Intervalo de verificação do loop (em segundos)
-INTERVALO_VERIFICACAO = 30
-
-
 # ==========================
 # Função para enviar SMS via endpoint
 # ==========================
@@ -51,7 +47,14 @@ async def monitorar_assistencias_direcao():
 
         agora = datetime.now()
 
-        print(f"\n📅 Verificando assistências em {agora}")
+        # Calcula o tempo até o início da próxima hora
+        proxima_hora = (agora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
+        tempo_ate_proxima_hora = (proxima_hora - agora).total_seconds()
+
+        print(f"\n📅 Verificando assistências em {agora}. Próxima verificação às {proxima_hora}")
+
+        # Espera até o início da próxima hora
+        await asyncio.sleep(tempo_ate_proxima_hora)
 
         async with SessionLocal() as db:
 
@@ -173,7 +176,7 @@ async def monitorar_assistencias_direcao():
                 print(f"✅ Status atualizado para NAO (Assistência ID {a.id})")
 
         # Espera próximo ciclo
-        await asyncio.sleep(INTERVALO_VERIFICACAO)
+        await asyncio.sleep(tempo_ate_proxima_hora)
 
 
 # ==========================
