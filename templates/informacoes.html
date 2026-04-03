@@ -12,18 +12,19 @@ body {
     padding:0;
 }
 
-/* BOTÃO BACK */
+/* BOTÃO VOLTAR */
 .back-btn{
     position:fixed;
     top:20px;
     left:20px;
-    font-size:22px;
+    font-size:20px;
     cursor:pointer;
     background:#06b6d4;
     color:white;
     padding:8px 12px;
     border-radius:8px;
-    transition:0.3s;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    transition:.3s;
     z-index:1000;
 }
 .back-btn:hover{
@@ -57,12 +58,13 @@ textarea, input[type="text"] {
     border-radius:6px;
     border:1px solid #cbd5e1;
     margin-bottom:10px;
+    font-family:inherit;
+    font-size:14px;
 }
 
 textarea {
-    height:140px;
-    resize:vertical;
-    white-space:pre-wrap; /* garante parágrafos */
+    height:120px;
+    resize:none;
     margin-bottom:20px;
 }
 
@@ -87,11 +89,10 @@ button:disabled {
 }
 </style>
 </head>
-
 <body>
 
 <!-- BOTÃO VOLTAR -->
-<div class="back-btn" onclick="voltarPagina()">←</div>
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
 
 <div class="container">
 
@@ -110,7 +111,7 @@ button:disabled {
 <input type="text" id="contactosExtras" placeholder="841234567, 871112233">
 
 <label>Mensagem</label>
-<textarea id="mensagem" required placeholder="Digite sua mensagem."></textarea>
+<textarea id="mensagem" required></textarea>
 
 <button type="submit" id="enviarBtn">Enviar SMS</button>
 
@@ -124,34 +125,31 @@ button:disabled {
 
 // BOTÃO VOLTAR
 function voltarPagina(){
-    if(document.referrer !== ""){
-        window.history.back();
-    }else{
-        window.location.href = "/dap";
-    }
+    window.history.back();
 }
 
-// URL dinâmica
+// URL dinâmica (local e Render)
 const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
     ? "http://127.0.0.1:8000"
     : window.location.origin;
 
-// ✅ NOVA FUNÇÃO: remove apenas acentos (mantém tudo resto, incluindo \n)
+// Remover apenas acentos, mantendo pontuação, números, letras e quebras de linha
 function removerAcentos(texto) {
     return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-// aplica sem destruir parágrafos
-function aplicarNormalizacao(el){
-    el.addEventListener("input", () => {
-        const pos = el.selectionStart;
-        el.value = removerAcentos(el.value);
-        el.setSelectionRange(pos, pos);
+// Normalização em tempo real do input
+function attachNormalization(inputElement) {
+    inputElement.addEventListener("input", () => {
+        const pos = inputElement.selectionStart;
+        inputElement.value = removerAcentos(inputElement.value);
+        inputElement.setSelectionRange(pos, pos);
     });
 }
 
-aplicarNormalizacao(document.getElementById("mensagem"));
-aplicarNormalizacao(document.getElementById("contactosExtras"));
+// Aplica nos campos
+attachNormalization(document.getElementById("mensagem"));
+attachNormalization(document.getElementById("contactosExtras"));
 
 function getTiposSelecionados() {
     return Array.from(document.querySelectorAll('input[name="tipo"]:checked'))
@@ -170,16 +168,14 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
     statusMsg.innerText = "A preparar envio...";
 
     const tipos = getTiposSelecionados();
-
-    // 🔥 IMPORTANTE: mantém exatamente como digitado (com parágrafos)
-    const mensagem = document.getElementById("mensagem").value;
-
+    const mensagem = document.getElementById("mensagem").value; // mantém parágrafos
     const contactosExtrasInput = document.getElementById("contactosExtras").value.trim();
 
     let numeros = [];
 
     try {
 
+        // Buscar números do banco
         for (const tipo of tipos) {
             const res = await fetch(`${API_BASE}/contactos/${tipo}`);
             if (!res.ok) continue;
@@ -187,6 +183,7 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
             dados.forEach(c => numeros.push(c.telefone));
         }
 
+        // Adicionar contactos extras
         if (contactosExtrasInput) {
             const extras = contactosExtrasInput
                 .split(",")
@@ -197,6 +194,7 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
             numeros = numeros.concat(extras);
         }
 
+        // Remover duplicados
         numeros = [...new Set(numeros)];
 
         if (numeros.length === 0) {
@@ -211,15 +209,17 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
 
         statusMsg.innerText = `A enviar para ${numeros.length} números...`;
 
+        // ENVIO SEQUENCIAL
         for (let i = 0; i < numeros.length; i++) {
 
             const numero = numeros[i];
 
-            statusMsg.innerText = `A enviar (${i + 1}/${numeros.length})...`;
+            statusMsg.innerText =
+                `A enviar (${i + 1}/${numeros.length})...`;
 
             const payload = {
-                sender_id: "PHANDIRA-2",
-                mensagem: mensagem, // 🔥 vai com parágrafos
+                sender_id: "ESG-DUNDA",
+                mensagem: mensagem, // mantém parágrafos
                 numeros: [numero]
             };
 
@@ -236,20 +236,21 @@ document.getElementById("formMensagem").addEventListener("submit", async functio
                     enviados.push(numero);
                 }
 
-            } catch {
+            } catch (err) {
                 falhados.push(numero);
             }
 
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(resolve => setTimeout(resolve, 300));
         }
 
-        statusMsg.style.color = falhados.length ? "orange" : "green";
+        statusMsg.style.color = falhados.length > 0 ? "orange" : "green";
         statusMsg.innerText =
             `Envio concluído ✅\nEnviados: ${enviados.length} | Falhados: ${falhados.length}`;
 
         document.getElementById("formMensagem").reset();
 
     } catch (error) {
+
         statusMsg.style.color = "red";
         statusMsg.innerText = "Erro: " + error.message;
     }

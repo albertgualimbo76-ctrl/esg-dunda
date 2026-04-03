@@ -16,7 +16,7 @@ from routers import (
     dashboard, importar_alunos, sms, encontro, contactos, assistencias, mozesms
 )
 from routers.mozesms import comprar_creditos
-from routers.pages import ep_phandira_2, dados_aluno, encontros, contacto, informacoes, assistencia, ass_direccao, comprar_creditos
+from routers.pages import esg_dunda, dados_aluno, encontros, contacto, informacoes, assistencia, ass_direccao, comprar_creditos
 from routers.assistencia_direcao import router as assistencia_direcao_router
 
 # 🔥 Monitores automáticos
@@ -39,7 +39,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "*",
-        "https://ep-phandira-2.onrender.com"
+        "https://esg-dunda.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -67,7 +67,7 @@ async def startup():
 # ==========================
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(url="/ep_phandira_2")
+    return RedirectResponse(url="/esg_dunda")
 
 # ==========================
 # API routes (sem prefixo /api)
@@ -100,7 +100,7 @@ app.include_router(mozesms.router)
 # ==========================
 # HTML pages
 # ==========================
-app.include_router(ep_phandira_2.router)
+app.include_router(esg_dunda.router)
 app.include_router(aluno.router)
 app.include_router(classe.router)
 app.include_router(turma.router)
@@ -124,6 +124,7 @@ app.include_router(assistencias.router)
 app.include_router(assistencia.router)
 app.include_router(ass_direccao.router)
 app.include_router(comprar_creditos.router)
+
 
 # ==========================
 # Fim do main.py

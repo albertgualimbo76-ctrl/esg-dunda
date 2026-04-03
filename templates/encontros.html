@@ -7,85 +7,35 @@
 <style>
 body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
 
-/* BOTÃO BACK */
+/* BOTÃO VOLTAR */
 .back-btn{
-    position:fixed;
-    top:20px;
-    left:20px;
-    font-size:22px;
-    cursor:pointer;
-    background:#06b6d4;
-    color:white;
-    padding:8px 12px;
-    border-radius:8px;
-    transition:0.3s;
-    z-index:1000;
+position:fixed;
+top:20px;
+left:20px;
+font-size:20px;
+cursor:pointer;
+background:#06b6d4;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+transition:.3s;
+z-index:1000;
 }
 .back-btn:hover{
-    background:#0891b2;
+background:#0891b2;
 }
 
-.container {
-    max-width:1200px;
-    margin:50px auto;
-    background:white;
-    padding:30px;
-    border-radius:10px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-    overflow-x:auto;
-}
-
+.container { max-width:1200px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); overflow-x:auto; }
 h1 { text-align:center; margin-bottom:20px; color:#0f172a; }
-
 form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:30px; }
-
-form input, form select {
-    padding:10px;
-    border-radius:6px;
-    border:1px solid #cbd5e1;
-    flex:1;
-    min-width:200px;
-}
-
-form button {
-    padding:10px 20px;
-    border:none;
-    border-radius:6px;
-    background:#06b6d4;
-    color:white;
-    cursor:pointer;
-    transition:.3s;
-}
-
+form input, form select { padding:10px; border-radius:6px; border:1px solid #cbd5e1; flex:1; min-width:200px; }
+form button { padding:10px 20px; border:none; border-radius:6px; background:#06b6d4; color:white; cursor:pointer; transition:.3s; }
 form button:hover { background:#0891b2; }
-
-table {
-    width:100%;
-    border-collapse:collapse;
-    margin-top:20px;
-    min-width:1100px;
-}
-
-table th, table td {
-    border:1px solid #cbd5e1;
-    padding:10px;
-    text-align:left;
-    font-size:14px;
-}
-
-table th {
-    background:#06b6d4;
-    color:white;
-}
-
-.actions button {
-    margin-right:5px;
-    padding:5px 10px;
-    border:none;
-    border-radius:4px;
-    cursor:pointer;
-}
-
+table { width:100%; border-collapse:collapse; margin-top:20px; min-width:1100px; }
+table th, table td { border:1px solid #cbd5e1; padding:10px; text-align:left; font-size:14px; }
+table th { background:#06b6d4; color:white; }
+.actions button { margin-right:5px; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
 .actions .edit { background:#22c55e; color:white; }
 .actions .delete { background:#ef4444; color:white; }
 </style>
@@ -94,27 +44,26 @@ table th {
 <body>
 
 <!-- BOTÃO VOLTAR -->
-<div class="back-btn" onclick="voltarPagina()">←</div>
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
 
 <div class="container">
     <h1>Gestão de Encontros</h1>
 
+    <!-- FORMULÁRIO -->
     <form id="formEncontro">
-        <input type="hidden" id="encontroId">
-
+        <input type="hidden" id="encontroId" value="">
         <input type="text" id="titulo" placeholder="Título do Encontro" required>
         <input type="text" id="descricao" placeholder="Descrição">
         <input type="datetime-local" id="data_hora" required>
-
         <select id="tipo" required>
             <option value="">Tipo</option>
             <option value="PROFESSORES">PROFESSORES</option>
             <option value="FUNCIONARIOS">FUNCIONÁRIOS</option>
         </select>
-
         <button type="submit">Salvar</button>
     </form>
 
+    <!-- TABELA -->
     <table>
         <thead>
             <tr>
@@ -138,28 +87,25 @@ table th {
 
 <script>
 
-/* BOTÃO VOLTAR INTELIGENTE */
+/* BOTÃO VOLTAR */
 function voltarPagina(){
-    if(document.referrer !== ""){
-        window.history.back();
-    }else{
-        window.location.href = "/dap"; // fallback
-    }
+    window.history.back();
 }
 
-// ==========================
+// Remover acentos
 function removerAcentos(texto) {
     return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "");
 }
 
 const API_BASE = "";
 
-// ==========================
+// Reset
 function resetForm() {
-    formEncontro.reset();
-    encontroId.value = "";
+    document.getElementById("formEncontro").reset();
+    document.getElementById("encontroId").value = "";
 }
 
+// Normalizar título
 function normalizarTitulo(titulo) {
     let t = titulo.toLowerCase();
     t = t.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -167,16 +113,16 @@ function normalizarTitulo(titulo) {
     return t.trim();
 }
 
+// Formatar data
 function formatarData(dataStr) {
     if (!dataStr) return "";
     return new Date(dataStr).toLocaleString();
 }
 
-// ==========================
+// LISTAR
 async function listarEncontros() {
     const res = await fetch(`${API_BASE}/encontros/`);
     const dados = await res.json();
-
     const tbody = document.getElementById("encontrosBody");
     tbody.innerHTML = "";
 
@@ -205,33 +151,33 @@ async function listarEncontros() {
     });
 }
 
-// ==========================
+// SALVAR
 async function criarOuAtualizarEncontro(e) {
     e.preventDefault();
 
-    const id = encontroId.value;
+    const id = document.getElementById("encontroId").value;
+    const titulo = normalizarTitulo(document.getElementById("titulo").value);
 
-    const tituloNormalizado = normalizarTitulo(titulo.value);
+    const dt = new Date(document.getElementById("data_hora").value);
 
-    const dt = new Date(data_hora.value);
-
-    const dataFormatada = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}T${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+    const dataFormatada =
+        `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}T${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
 
     const dados = {
-        titulo: tituloNormalizado,
-        descricao: descricao.value,
+        titulo: titulo,
+        descricao: document.getElementById("descricao").value,
         data_hora: dataFormatada,
-        tipo: tipo.value
+        tipo: document.getElementById("tipo").value
     };
 
-    if(id){
-        await fetch(`${API_BASE}/encontros/${id}`,{
+    if (id) {
+        await fetch(`${API_BASE}/encontros/${id}`, {
             method:"PUT",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify(dados)
         });
-    }else{
-        await fetch(`${API_BASE}/encontros/`,{
+    } else {
+        await fetch(`${API_BASE}/encontros/`, {
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body:JSON.stringify(dados)
@@ -242,42 +188,38 @@ async function criarOuAtualizarEncontro(e) {
     listarEncontros();
 }
 
-// ==========================
-async function editar(id){
+// EDITAR
+async function editar(id) {
     const res = await fetch(`${API_BASE}/encontros/${id}`);
     const e = await res.json();
 
-    encontroId.value = e.id;
-    titulo.value = e.titulo;
-    descricao.value = e.descricao || "";
+    document.getElementById("encontroId").value = e.id;
+    document.getElementById("titulo").value = e.titulo;
+    document.getElementById("descricao").value = e.descricao || "";
 
     const dt = new Date(e.data_hora);
+    document.getElementById("data_hora").value =
+        `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}T${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
 
-    data_hora.value = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}T${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
-
-    tipo.value = e.tipo;
+    document.getElementById("tipo").value = e.tipo;
 }
 
-// ==========================
-async function deletar(id){
-    await fetch(`${API_BASE}/encontros/${id}`,{method:"DELETE"});
+// DELETAR
+async function deletar(id) {
+    await fetch(`${API_BASE}/encontros/${id}`, { method:"DELETE" });
     listarEncontros();
 }
 
-// ==========================
-titulo.addEventListener("input",(e)=>{
-    const pos=e.target.selectionStart;
-    e.target.value=removerAcentos(e.target.value);
-    e.target.setSelectionRange(pos,pos);
+// EVENTOS
+document.getElementById("titulo").addEventListener("input", e=>{
+    e.target.value = removerAcentos(e.target.value);
 });
 
-descricao.addEventListener("input",(e)=>{
-    const pos=e.target.selectionStart;
-    e.target.value=removerAcentos(e.target.value);
-    e.target.setSelectionRange(pos,pos);
+document.getElementById("descricao").addEventListener("input", e=>{
+    e.target.value = removerAcentos(e.target.value);
 });
 
-formEncontro.addEventListener("submit",criarOuAtualizarEncontro);
+document.getElementById("formEncontro").addEventListener("submit", criarOuAtualizarEncontro);
 
 listarEncontros();
 

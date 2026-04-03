@@ -5,8 +5,8 @@ import requests
 router = APIRouter(prefix="/mozesms", tags=["MozeSMS"])
 
 # 🔴 Credenciais (como você pediu)
-API_KEY = 'mk_7cef2d3000ed1336907ba646a657374e'
-API_SECRET = 'sk_26390bd190cfe2ab6871d577293bd07b616db33ea0d50c843a0afdfde937fe30'
+API_KEY = 'mk_9fc1c62e7fbd44b28c3cf2905af1c477'
+API_SECRET = 'sk_e7d0d061bbdae9809754d2678b330de539c92cca89c917831423235fbb118b02'
 
 API_URL = 'https://apiv4.mozesms.com/billing/purchase'
 
