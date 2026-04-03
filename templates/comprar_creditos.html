@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Compra de Créditos</title>
+
+<style>
+body { font-family: Arial, sans-serif; background: #f4f6f9; }
+.container { width: 420px; margin: 60px auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+h2 { text-align: center; }
+label { margin-top: 15px; display:block; }
+input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+button { width: 100%; margin-top: 20px; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+button:hover { background: #218838; }
+#resultado { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+.success { background: #e6fffa; color: #065f46; }
+.error { background: #fee2e2; color: #991b1b; }
+.loading { text-align:center; }
+.info-box { background:#fff3cd; padding:10px; border-radius:6px; margin-top:10px; font-size:14px; }
+#saldo { margin-top:10px; font-weight:bold; text-align:center; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>💳 Comprar Créditos SMS</h2>
+
+    <div id="saldo">Saldo: carregando...</div>
+
+    <form id="formCompra">
+        <label>Valor (MZN)</label>
+        <input type="number" id="amount" required>
+
+        <label>Método de Pagamento</label>
+        <select id="gateway" required>
+            <option value="">-- Escolher --</option>
+            <option value="mpesa">M-Pesa</option>
+            <option value="emola">E-Mola</option>
+        </select>
+
+        <div id="phoneField" style="display:none;">
+            <label>Número de Telefone (somente 9 dígitos)</label>
+            <input type="text" id="phone" placeholder="xxxxxxxxx" maxlength="9" pattern="\d{9}" title="Insira os 9 dígitos do número">
+        </div>
+
+        <button type="submit">Comprar</button>
+    </form>
+
+    <div id="resultado"></div>
+</div>
+
+<script>
+const token = "bWtfZWI2ZjdiZDRmNTE4OWMyM2U0MTQ1NGQ4YjE0NzgxYjk6MTM2OnNrX2IxMzZlMmEyOWY1ZmI3MzkzYWE1OTU1YmM4MDFhZjE1YzQ1MDE4MGIyMTJkNzdiNTcwMzhiYzRjMjRmMzA2NTA=";
+
+const form = document.getElementById("formCompra");
+const gateway = document.getElementById("gateway");
+const resultado = document.getElementById("resultado");
+const saldoEl = document.getElementById("saldo");
+const phoneField = document.getElementById("phoneField");
+const phoneInput = document.getElementById("phone");
+
+const VALOR_MIN = 250;
+
+// Mostrar campo telefone
+gateway.addEventListener("change", () => {
+    phoneField.style.display = (gateway.value === "mpesa" || gateway.value === "emola") ? "block" : "none";
+});
+
+// Atualizar saldo automaticamente da MozeSMS
+async function atualizarSaldo() {
+    try {
+        const res = await fetch("https://api.mozesms.com/v1/account/balance", {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const saldoSMS = Math.floor(data.data.balance * (71/98.85));
+            saldoEl.innerText = `Saldo SMS: ${saldoSMS}`;
+        } else {
+            saldoEl.innerText = "Erro ao carregar saldo";
+        }
+    } catch {
+        saldoEl.innerText = "Erro ao conectar saldo";
+    }
+}
+
+// Atualiza a cada 5 segundos
+setInterval(atualizarSaldo, 5000);
+window.onload = atualizarSaldo;
+
+// Enviar formulário
+form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const amount = parseFloat(document.getElementById("amount").value);
+    const phoneDigits = phoneInput.value; // só os 9 dígitos
+
+    if (amount < VALOR_MIN) {
+        resultado.style.display = "block";
+        resultado.className = "error";
+        resultado.innerHTML = `⚠️ Valor mínimo permitido é ${VALOR_MIN} MZN.`;
+        return;
+    }
+
+    if ((phoneDigits.length !== 9 || isNaN(phoneDigits))) {
+        resultado.style.display = "block";
+        resultado.className = "error";
+        resultado.innerHTML = `⚠️ Insira os 9 dígitos do número de telefone.`;
+        return;
+    }
+
+    resultado.style.display = "block";
+    resultado.className = "loading";
+    resultado.innerHTML = "⏳ Processando pagamento...";
+
+    // Envia para a API usando 258 + 9 dígitos
+    const data = { amount, gateway: gateway.value, phone: "258" + phoneDigits };
+
+    try {
+        const response = await fetch("/mozesms/comprar-creditos", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+            const tx = result.transacao.data;
+
+            resultado.className = "success";
+            resultado.innerHTML = `
+                <b>ID da Transação:</b> ${tx.transaction_id}<br>
+                <b>NIB:</b> ${tx.payment_to.number}<br>
+                <b>Banco:</b> Nedbank (Ned)<br><br>
+                <h3>Instruções de Pagamento</h3>
+                💰 Transfere <b>${tx.total_to_pay} MZN</b> para o NIB acima.<br><br>
+                📲 Use o número <b>${phoneDigits}</b> para transferir. O número contrário dará erro de confirmação.<br><br>
+                ⏳ Aguarde a mensagem de confirmação da MozeSMS no seu telemóvel.<br>
+                <div class="info-box">
+                    ⚠️ O saldo será atualizado automaticamente após confirmação do pagamento.
+                </div>
+            `;
+
+            // Atualiza saldo imediatamente após enviar a instrução
+            atualizarSaldo();
+
+        } else {
+            resultado.className = "error";
+            resultado.innerHTML = "❌ Erro: " + JSON.stringify(result.detail);
+        }
+
+    } catch {
+        resultado.className = "error";
+        resultado.innerHTML = "❌ Erro ao conectar com o servidor.";
+    }
+});
+</script>
+
+</body>
+</html>

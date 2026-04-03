@@ -14,25 +14,6 @@ margin:0;
 padding:0;
 }
 
-/* BOTÃO VOLTAR */
-.back-btn{
-position:fixed;
-top:20px;
-left:20px;
-font-size:20px;
-cursor:pointer;
-background:#06b6d4;
-color:white;
-padding:8px 12px;
-border-radius:8px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-transition:.3s;
-z-index:1000;
-}
-.back-btn:hover{
-background:#0891b2;
-}
-
 .container{
 max-width:1400px;
 margin:50px auto;
@@ -41,6 +22,24 @@ padding:30px;
 border-radius:10px;
 box-shadow:0 5px 15px rgba(0,0,0,.1);
 overflow-x:auto;
+}
+
+/* BOTÃO VOLTAR */
+.back-btn{
+position:fixed;
+top:20px;
+left:20px;
+font-size:22px;
+cursor:pointer;
+background:#06b6d4;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+transition:0.3s;
+z-index:1000;
+}
+.back-btn:hover{
+background:#0891b2;
 }
 
 h1{
@@ -141,7 +140,7 @@ border:1px solid #f5c6cb;
 <body>
 
 <!-- BOTÃO VOLTAR -->
-<div class="back-btn" onclick="voltarPagina()">⬅️</div>
+<div class="back-btn" onclick="voltarPagina()">←</div>
 
 <div class="container">
 
@@ -229,16 +228,219 @@ Aprovar 3º Trimestre
 
 <script>
 
-/* BOTÃO VOLTAR */
+// FUNÇÃO DO BOTÃO DE VOLTAR
 function voltarPagina(){
-    window.history.back();
+    if(document.referrer !== ""){
+        window.history.back();
+    } else {
+        window.location.href = "/dap";  // Ajuste a URL conforme necessário
+    }
 }
 
 const API = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
 ? "http://127.0.0.1:8000"
-: "https://esg-dunda.onrender.com";
+: "https://ep-phandira-2.onrender.com";
 
-/* resto do seu JS continua igual... */
+
+/* =========================================
+   REMOVER ACENTOS E CARACTERES ESPECIAIS
+========================================= */
+
+function limparTexto(texto){
+    return texto
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g,"")
+        .replace(/[^a-zA-Z0-9 ]/g,"");
+}
+
+/* aplica em todos os inputs automaticamente */
+document.addEventListener("input", function(e){
+    if(e.target.tagName === "INPUT"){
+        if(e.target.type !== "datetime-local"){
+            e.target.value = limparTexto(e.target.value);
+        }
+    }
+})
+
+/* ================================
+   MENSAGEM
+================================ */
+
+function exibirMensagem(mensagem,tipo="erro") {
+    const div = document.getElementById("mensagem");
+    div.style.display = "block";
+    div.textContent = mensagem;
+    if(tipo === "erro") {
+        div.style.background = "#f8d7da";
+        div.style.color = "#721c24";
+    } else {
+        div.style.background = "#d4edda";
+        div.style.color = "#155724";
+    }
+}
+
+/* ================================
+   FETCH PADRÃO
+================================ */
+
+async function fetchComErro(url,options={}) {
+    const res = await fetch(url, options);
+    if(!res.ok) {
+        const text = await res.text();
+        exibirMensagem("Erro "+res.status+" : "+text);
+        throw new Error(text);
+    }
+    return res.json();
+}
+
+/* ================================
+   DROPDOWNS
+================================ */
+
+async function carregarProfessores() {
+    const dados = await fetchComErro(`${API}/assistencias-direcao/professores`);
+    const select = document.getElementById("professor_assistido_nome");
+    select.innerHTML = '<option value="">Professor Assistido</option>';
+    dados.forEach(p => {
+        select.innerHTML += `<option value="${p}">${p}</option>`;
+    });
+}
+
+async function carregarDiretores() {
+    const dados = await fetchComErro(`${API}/assistencias-direcao/diretores`);
+    const select = document.getElementById("diretor_assistente_nome");
+    select.innerHTML = '<option value="">Diretor Assistente</option>';
+    dados.forEach(d => {
+        select.innerHTML += `<option value="${d}">${d}</option>`;
+    });
+}
+
+/* ================================
+   LISTAR
+================================ */
+
+async function listar() {
+    const dados = await fetchComErro(`${API}/assistencias-direcao/`);
+    const tbody = document.getElementById("assistenciasBody");
+    tbody.innerHTML = "";
+    dados.forEach(a => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${a.id}</td>
+                <td>${a.professor_assistido_nome}</td>
+                <td>${a.diretor_assistente_nome}</td>
+                <td>${a.classe}</td>
+                <td>${a.turma}</td>
+                <td>${a.disciplina}</td>
+                <td>${a.numero_sala}</td>
+                <td>${a.localizacao_sala}</td>
+                <td>${a.trimestre}</td>
+                <td>${new Date(a.data_hora).toLocaleString()}</td>
+                <td>${a.status_aprovacao}</td>
+                <td>${new Date(a.criado_em).toLocaleString()}</td>
+                <td class="actions">
+                    <button class="edit" onclick="editar(${a.id})">Editar</button>
+                    <button class="delete" onclick="deletar(${a.id})">Apagar</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+/* ================================
+   SALVAR
+================================ */
+
+async function salvar(e) {
+    e.preventDefault();
+    const id = document.getElementById("assistenciaId").value;
+    const dados = {
+        professor_assistido_nome: document.getElementById("professor_assistido_nome").value,
+        diretor_assistente_nome: document.getElementById("diretor_assistente_nome").value,
+        classe: document.getElementById("classe").value,
+        turma: document.getElementById("turma").value,
+        disciplina: document.getElementById("disciplina").value,
+        numero_sala: document.getElementById("numero_sala").value,
+        localizacao_sala: document.getElementById("localizacao_sala").value,
+        trimestre: document.getElementById("trimestre").value,
+        data_hora: document.getElementById("data_hora").value.replace("T", " "),
+        status_aprovacao: "NAO"
+    };
+
+    if(id) {
+        await fetchComErro(`${API}/assistencias-direcao/id/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados)
+        });
+        exibirMensagem("Assistência atualizada", "sucesso");
+    } else {
+        await fetchComErro(`${API}/assistencias-direcao/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dados)
+        });
+        exibirMensagem("Assistência salva", "sucesso");
+    }
+    document.getElementById("formAssistencia").reset();
+    listar();
+}
+
+/* ================================
+   EDITAR
+================================ */
+
+async function editar(id) {
+    const a = await fetchComErro(`${API}/assistencias-direcao/id/${id}`);
+    document.getElementById("assistenciaId").value = a.id;
+    document.getElementById("professor_assistido_nome").value = a.professor_assistido_nome;
+    document.getElementById("diretor_assistente_nome").value = a.diretor_assistente_nome;
+    document.getElementById("classe").value = a.classe;
+    document.getElementById("turma").value = a.turma;
+    document.getElementById("disciplina").value = a.disciplina;
+    document.getElementById("numero_sala").value = a.numero_sala;
+    document.getElementById("localizacao_sala").value = a.localizacao_sala;
+    document.getElementById("trimestre").value = a.trimestre;
+    document.getElementById("data_hora").value = a.data_hora.slice(0,16);
+}
+
+/* ================================
+   DELETAR
+================================ */
+
+async function deletar(id) {
+    await fetchComErro(`${API}/assistencias-direcao/id/${id}`, {
+        method: "DELETE"
+    });
+    exibirMensagem("Assistência apagada", "sucesso");
+    listar();
+}
+
+/* ================================
+   STATUS TRIMESTRE
+================================ */
+
+async function alterarStatusTrimestreGlobal(trimestre, checked) {
+    const status = checked ? "APROVADO" : "NAO";
+    await fetchComErro(`${API}/assistencias-direcao/aprovar-trimestre`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            trimestre: trimestre.toString(),
+            status: status
+        })
+    });
+    listar();
+}
+
+/* ================================
+   INICIAR
+================================ */
+
+document.getElementById("formAssistencia").addEventListener("submit", salvar);
+carregarProfessores();
+carregarDiretores();
+listar();
 
 </script>
 

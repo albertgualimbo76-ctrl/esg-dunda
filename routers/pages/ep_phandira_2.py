@@ -6,9 +6,9 @@ router = APIRouter()
 
 templates = Jinja2Templates(directory="templates")
 
-@router.get("/ass_direccao", response_class=HTMLResponse)
-async def ass_direccao(request: Request):
+@router.get("/ep_phandira_2", response_class=HTMLResponse)
+async def dashboard(request: Request):
     return templates.TemplateResponse(
-        "ass_direccao.html",
+        "index.html",
         {"request": request}
     )

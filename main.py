@@ -4,6 +4,7 @@ import asyncio
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from routers import mozesms
 
 # Banco de dados
 from database import Base, engine
@@ -12,9 +13,10 @@ from database import Base, engine
 from routers import (
     professor, aluno, classe, turma, matricula, admin, dap,
     director, chefe_secretaria, funcionario_secretaria, usuario_professor,
-    dashboard, importar_alunos, sms, encontro, contactos, assistencias
+    dashboard, importar_alunos, sms, encontro, contactos, assistencias, mozesms
 )
-from routers.pages import esg_dunda, dados_aluno, encontros, contacto, informacoes, assistencia, ass_direccao
+from routers.mozesms import comprar_creditos
+from routers.pages import ep_phandira_2, dados_aluno, encontros, contacto, informacoes, assistencia, ass_direccao, comprar_creditos
 from routers.assistencia_direcao import router as assistencia_direcao_router
 
 # 🔥 Monitores automáticos
@@ -37,7 +39,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "*",
-        "https://esg-dunda.onrender.com"
+        "https://ep-phandira-2.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -65,7 +67,7 @@ async def startup():
 # ==========================
 @app.get("/", include_in_schema=False)
 async def root():
-    return RedirectResponse(url="/esg_dunda")
+    return RedirectResponse(url="/ep_phandira_2")
 
 # ==========================
 # API routes (sem prefixo /api)
@@ -93,11 +95,12 @@ app.include_router(informacoes.router)  # /informacoes
 app.include_router(assistencias.router)  # /assistencias
 app.include_router(assistencia.router)  # /assistencia
 app.include_router(ass_direccao.router)  # /ass_direccao
+app.include_router(mozesms.router)
 
 # ==========================
 # HTML pages
 # ==========================
-app.include_router(esg_dunda.router)
+app.include_router(ep_phandira_2.router)
 app.include_router(aluno.router)
 app.include_router(classe.router)
 app.include_router(turma.router)
@@ -120,6 +123,7 @@ app.include_router(informacoes.router)
 app.include_router(assistencias.router)
 app.include_router(assistencia.router)
 app.include_router(ass_direccao.router)
+app.include_router(comprar_creditos.router)
 
 # ==========================
 # Fim do main.py
