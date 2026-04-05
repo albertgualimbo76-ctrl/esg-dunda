@@ -118,7 +118,7 @@ async def monitorar_encontros_coletivo():
                     # envia mesmo se já passou, desde que o encontro ainda não ocorreu
                     if agora >= momento_conv:
                         mensagem_conv = (
-                            f"Incumbe me o exmo Senhor Director da escola em convocar a todos membros de direcção para participarem na {encontro.titulo} sessao do colectivo da direccao, a ter lugar no dia {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h no gabinete da Directora da Escola. O Chefe da Secretaria: Castigo Maibeque"
+                            f"Incumbe me o exmo Senhor Director da escola em convocar a todos membros de direcção para participarem na {encontro.titulo} sessao do colectivo da direccao, a ter lugar no dia {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h no gabinete da Directora da Escola. Chefe da Secretaria"
                         )
 
                         enviados = 0

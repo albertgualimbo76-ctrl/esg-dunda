@@ -78,7 +78,7 @@ async def monitorar_outros_encontros():
                     numeros_alerta = await pegar_numeros("diretor")
                     if numeros_alerta:
                         mensagem_alerta = (
-                            f"Saudacoes, ha um encontro referente a '{encontro.titulo}', "
+                            f"Saudacoes, ha um encontro referente a {encontro.titulo}, "
                             f"agendado para {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h. "
                             f"Se pretende adiar ou cancelar, entre no sistema."
                         )
