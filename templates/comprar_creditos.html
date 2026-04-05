@@ -18,6 +18,7 @@ button:hover { background: #218838; }
 .loading { text-align:center; }
 .info-box { background:#fff3cd; padding:10px; border-radius:6px; margin-top:10px; font-size:14px; }
 #saldo { margin-top:10px; font-weight:bold; text-align:center; }
+#contador { font-weight:bold; color:#d97706; margin-top:10px; text-align:center; font-size:16px; }
 </style>
 </head>
 
@@ -48,17 +49,18 @@ button:hover { background: #218838; }
     </form>
 
     <div id="resultado"></div>
+    <div id="contador"></div>
 </div>
 
 <script>
 const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
-
 const form = document.getElementById("formCompra");
 const gateway = document.getElementById("gateway");
 const resultado = document.getElementById("resultado");
 const saldoEl = document.getElementById("saldo");
 const phoneField = document.getElementById("phoneField");
 const phoneInput = document.getElementById("phone");
+const contadorEl = document.getElementById("contador");
 
 const VALOR_MIN = 250;
 
@@ -89,12 +91,29 @@ async function atualizarSaldo() {
 setInterval(atualizarSaldo, 5000);
 window.onload = atualizarSaldo;
 
+// Função de contagem regressiva com alerta
+function iniciarContagem(segundos) {
+    let tempo = segundos;
+    contadorEl.style.display = "block";
+
+    const interval = setInterval(() => {
+        const min = Math.floor(tempo / 60);
+        const sec = tempo % 60;
+        contadorEl.innerText = `⏳ Tempo restante: ${min}m ${sec}s - Transfira antes que expire!`;
+        tempo--;
+
+        if (tempo < 0) {
+            clearInterval(interval);
+contadorEl.innerHTML = '⚠️ Tempo expirado. Clique em <b style="color:#d93025;">Comprar</b> novamente para gerar nova transação.';        }
+    }, 1000);
+}
+
 // Enviar formulário
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const amount = parseFloat(document.getElementById("amount").value);
-    const phoneDigits = phoneInput.value; // só os 9 dígitos
+    const phoneDigits = phoneInput.value;
 
     if (amount < VALOR_MIN) {
         resultado.style.display = "block";
@@ -114,7 +133,6 @@ form.addEventListener("submit", async (e) => {
     resultado.className = "loading";
     resultado.innerHTML = "⏳ Processando pagamento...";
 
-    // Envia para a API usando 258 + 9 dígitos
     const data = { amount, gateway: gateway.value, phone: "258" + phoneDigits };
 
     try {
@@ -142,7 +160,10 @@ form.addEventListener("submit", async (e) => {
                 </div>
             `;
 
-            // Atualiza saldo imediatamente após enviar a instrução
+            // Iniciar contagem regressiva de 10 minutos
+            iniciarContagem(600);
+
+            // Atualiza saldo imediatamente
             atualizarSaldo();
 
         } else {
