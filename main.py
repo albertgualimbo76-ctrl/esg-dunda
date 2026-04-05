@@ -13,16 +13,18 @@ from database import Base, engine
 from routers import (
     professor, aluno, classe, turma, matricula, admin, dap,
     director, chefe_secretaria, funcionario_secretaria, usuario_professor,
-    dashboard, importar_alunos, sms, encontro, contactos, assistencias, mozesms
+    dashboard, importar_alunos, sms, encontro, contactos, assistencias, mozesms, encontro_coletivo, outros_encontros
 )
 from routers.mozesms import comprar_creditos
-from routers.pages import esg_dunda, dados_aluno, encontros, contacto, informacoes, assistencia, ass_direccao, comprar_creditos
+from routers.pages import esg_dunda, dados_aluno, encontros, contacto, informacoes, assistencia, ass_direccao, comprar_creditos, encontros_coletivo, outro_encontro
 from routers.assistencia_direcao import router as assistencia_direcao_router
 
 # 🔥 Monitores automáticos
 from services.monitor_encontros import monitorar_encontros
 from services.monitorar_assistencias import monitorar_assistencias
 from services.monitor_ass_direcao import monitorar_assistencias_direcao as monitor_ass_direcao
+from services.monitor_encontro_coletivo import monitorar_encontros_coletivo
+from services.monitor_outros_encontros import monitorar_outros_encontros
 
 # Verifica ambiente
 is_production = os.getenv("ENV") == "production"
@@ -59,6 +61,8 @@ async def startup():
     asyncio.create_task(monitorar_encontros())
     asyncio.create_task(monitorar_assistencias())
     asyncio.create_task(monitor_ass_direcao())
+    asyncio.create_task(monitorar_encontros_coletivo())
+    asyncio.create_task(monitorar_outros_encontros())
 
     print("✅ Sistema iniciado com monitor automático de encontros e assistências")
 
@@ -96,6 +100,8 @@ app.include_router(assistencias.router)  # /assistencias
 app.include_router(assistencia.router)  # /assistencia
 app.include_router(ass_direccao.router)  # /ass_direccao
 app.include_router(mozesms.router)
+app.include_router(encontro_coletivo.router)
+app.include_router(outros_encontros.router)
 
 # ==========================
 # HTML pages
@@ -124,6 +130,8 @@ app.include_router(assistencias.router)
 app.include_router(assistencia.router)
 app.include_router(ass_direccao.router)
 app.include_router(comprar_creditos.router)
+app.include_router(encontros_coletivo.router)
+app.include_router(outro_encontro.router)
 
 
 # ==========================
