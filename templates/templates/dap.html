@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>ESG-DUNDA</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+html,body{
+    height:100%;
+}
+body{
+    display:flex;
+    background:#f1f5f9;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:260px;
+    background:linear-gradient(180deg,#06b6d4,#22c55e);
+    color:white;
+    padding:25px;
+    position:relative;
+    height:100vh;
+    overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar {
+    width:6px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius:3px;
+}
+.back-btn{
+    position:absolute;
+    top:15px;
+    left:15px;
+    font-size:20px;
+    cursor:pointer;
+    background:rgba(255,255,255,0.2);
+    padding:6px 10px;
+    border-radius:8px;
+    transition:0.3s;
+}
+.back-btn:hover{
+    background:rgba(255,255,255,0.4);
+}
+.logo{
+    font-size:22px;
+    font-weight:bold;
+    margin:40px 0 40px 0;
+}
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+.menu a{
+    text-decoration:none;
+    color:white;
+    padding:12px;
+    border-radius:8px;
+    background:rgba(255,255,255,0.1);
+    cursor:pointer;
+    transition:0.2s;
+}
+.menu a:hover{
+    background:rgba(255,255,255,0.25);
+}
+.menu a.recarregar-lateral{
+    color:red;
+    font-weight:bold;
+    background:rgba(255,255,255,0.15);
+}
+.menu a.recarregar-lateral:hover{
+    background:rgba(255,0,0,0.2);
+}
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow:hidden;
+}
+.topbar{
+    height:70px;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 30px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+    z-index:2;
+}
+.painel{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+    z-index:2;
+    text-align:center;
+}
+.painel h2{
+    font-size:28px;
+    color:#0f172a;
+    margin-bottom:10px;
+}
+.painel p{
+    color:#475569;
+    font-size:18px;
+}
+.fundo-animado{
+    position:absolute;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    overflow:hidden;
+    z-index:1;
+}
+.fundo-animado span{
+    position:absolute;
+    display:block;
+    border-radius:50%;
+    background:rgba(6,182,212,0.25);
+    animation:flutuar linear infinite;
+}
+.fundo-animado span:nth-child(1){width:220px;height:220px;left:10%;animation-duration:25s;}
+.fundo-animado span:nth-child(2){width:150px;height:150px;left:30%;animation-duration:18s;}
+.fundo-animado span:nth-child(3){width:260px;height:260px;left:60%;animation-duration:28s;}
+.fundo-animado span:nth-child(4){width:180px;height:180px;left:80%;animation-duration:22s;}
+.fundo-animado span:nth-child(5){width:120px;height:120px;left:50%;animation-duration:16s;}
+@keyframes flutuar{
+    0%{transform:translateY(100vh) scale(0.8);opacity:0;}
+    20%{opacity:1;}
+    100%{transform:translateY(-120vh) scale(1.2);opacity:0;}
+}
+.footer{
+    padding:12px 30px;
+    font-size:13px;
+    color:#64748b;
+    background:white;
+    text-align:right;
+    z-index:2;
+}
+#smsCount {
+    color: #475569;
+    font-weight: bold;
+    font-size: 16px;
+    text-align: right;
+    display: inline-block;
+    margin-top: 20px;
+    position: absolute;
+    right: 30px;
+    top: 0px;
+}
+.recarregar-topbar {
+    color: #ffcc00;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition:0.2s;
+}
+.recarregar-topbar:hover{
+    color:#ff9900;
+}
+</style>
+</head>
+
+<body>
+<div class="sidebar">
+    <div class="back-btn" onclick="voltarPagina()">⬅️</div>
+    <div class="logo">🏫 ESG-DUNDA</div>
+
+    <div class="menu">
+        <a onclick="criarContacto()">Gerenciar contactos-SMS</a>
+        <a onclick="agendarEncontros()">Agendar encontros-SMS</a>
+        <a onclick="agendarEncontros_coletivo()">Agendar encontros do colectivo da direcção-SMS</a>
+        <a onclick="agendarOutros_encontros()">Agendar encontros com elementos/grupo específicos-SMS</a>
+        <a onclick="criarInformacoes()">Enviar outras informacoes-SMS</a>
+        <a onclick="criarAssistencias()">Fazer Plano de assistencias mútuas</a>
+        <a onclick="criarAss_direccao()">Fazer Plano de assistencias de direccao</a>
+        <a onclick="recarregarSMS()" class="recarregar-lateral">💳 Recarregar SMS</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div></div>
+        <div id="smsCount">
+            <span id="smsText">Saldo SMS: Carregando...</span>
+            <br>
+            <a id="recarregarLink" class="recarregar-topbar" href="/comprar_creditos">Recarregar</a>
+        </div>
+    </div>
+
+    <div class="fundo-animado">
+        <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="painel">
+        <div>
+            <h2>Bem-vindo ao painel</h2>
+            <p>Selecione uma opção no menu lateral.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        © <span id="year"></span> Proempy Services
+    </div>
+</div>
+
+<script>
+const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
+
+async function consultarSaldo() {
+    const url = "https://api.mozesms.com/v1/account/balance";
+
+    try {
+        const response = await fetch(url, {method:'GET', headers:{'Authorization':`Bearer ${token}`}});
+        if (!response.ok) throw new Error('Erro ao consultar saldo');
+        const data = await response.json();
+        if (data.success) {
+            const saldo = data.data.balance;
+
+            // Mostra apenas a parte inteira, sem arredondar
+            const smsEquivalentes = Math.floor(saldo * (1 / 1.356));
+
+            document.getElementById('smsText').textContent = `Saldo SMS: ${smsEquivalentes}`;
+            document.getElementById('recarregarLink').style.display = (smsEquivalentes <= 100) ? 'inline' : 'none';
+        } else {
+            throw new Error('Falha ao obter o saldo');
+        }
+    } catch (error) {
+        document.getElementById('smsText').textContent = `Erro: ${error.message}`;
+    }
+}
+
+document.getElementById("year").textContent = new Date().getFullYear();
+function voltarPagina(){ window.history.back(); }
+function abrirDadosAluno(){ window.location.href="/dados_aluno"; }
+function agendarEncontros(){ window.location.href="/encontros"; }
+function agendarEncontros_coletivo(){ window.location.href="/encontros_coletivo"; }
+function agendarOutros_encontros(){ window.location.href="/outro_encontro"; }
+function criarContacto(){ window.location.href="/contacto"; }
+function criarInformacoes(){ window.location.href="/informacoes"; }
+function criarAssistencias(){ window.location.href="/assistencia"; }
+function criarAss_direccao(){ window.location.href="/ass_direccao"; }
+function recarregarSMS(){ window.location.href="/comprar_creditos"; }
+
+window.onload = consultarSaldo;
+setInterval(consultarSaldo, 10000);
+</script>
+
+</body>
+</html>
