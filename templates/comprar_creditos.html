@@ -19,6 +19,7 @@ button:hover { background: #218838; }
 .info-box { background:#fff3cd; padding:10px; border-radius:6px; margin-top:10px; font-size:14px; }
 #saldo { margin-top:10px; font-weight:bold; text-align:center; }
 #contador { font-weight:bold; color:#d97706; margin-top:10px; text-align:center; font-size:16px; }
+#smsEstimado { margin-top:10px; font-weight:bold; text-align:center; display:none; color:#0f5132; }
 </style>
 </head>
 
@@ -31,7 +32,8 @@ button:hover { background: #218838; }
 
     <form id="formCompra">
         <label>Valor (MZN)</label>
-        <input type="number" id="amount" required>
+        <input type="number" id="amount" placeholder="Mínimo = 250MZN" required min="0" step="any">
+        <div id="smsEstimado">SMS estimado: 0</div>
 
         <label>Método de Pagamento</label>
         <select id="gateway" required>
@@ -54,6 +56,7 @@ button:hover { background: #218838; }
 
 <script>
 const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
+
 const form = document.getElementById("formCompra");
 const gateway = document.getElementById("gateway");
 const resultado = document.getElementById("resultado");
@@ -61,6 +64,8 @@ const saldoEl = document.getElementById("saldo");
 const phoneField = document.getElementById("phoneField");
 const phoneInput = document.getElementById("phone");
 const contadorEl = document.getElementById("contador");
+const amountInput = document.getElementById("amount");
+const smsEstimadoEl = document.getElementById("smsEstimado");
 
 const VALOR_MIN = 250;
 
@@ -77,7 +82,7 @@ async function atualizarSaldo() {
         });
         const data = await res.json();
         if (data.success) {
-            const saldoSMS = Math.floor(data.data.balance * (71/98.85));
+            const saldoSMS = Math.floor(data.data.balance * (1/1.356));
             saldoEl.innerText = `Saldo SMS: ${saldoSMS}`;
         } else {
             saldoEl.innerText = "Erro ao carregar saldo";
@@ -104,15 +109,29 @@ function iniciarContagem(segundos) {
 
         if (tempo < 0) {
             clearInterval(interval);
-contadorEl.innerHTML = '⚠️ Tempo expirado. Clique em <b style="color:#d93025;">Comprar</b> novamente para gerar nova transação.';        }
+            contadorEl.innerHTML = '⚠️ Tempo expirado. Clique em <b style="color:#d93025;">Comprar</b> novamente para gerar nova transação.';
+        }
     }, 1000);
 }
+
+// Atualizar estimativa de SMS ao digitar
+function atualizarSmsEstimado() {
+    const valor = parseFloat(amountInput.value) || 0;
+    if(valor > 0){
+        const sms = Math.floor(valor / 1.356); // Cada SMS custa 1.356 MZN
+        smsEstimadoEl.innerText = `O valor digitado é para pagar ${sms} SMS`;
+        smsEstimadoEl.style.display = "block";
+    } else {
+        smsEstimadoEl.style.display = "none";
+    }
+}
+amountInput.addEventListener("input", atualizarSmsEstimado);
 
 // Enviar formulário
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const amount = parseFloat(document.getElementById("amount").value);
+    const amount = parseFloat(amountInput.value);
     const phoneDigits = phoneInput.value;
 
     if (amount < VALOR_MIN) {
@@ -153,19 +172,15 @@ form.addEventListener("submit", async (e) => {
                 <b>Banco:</b> Nedbank (Ned)<br><br>
                 <h3>Instruções de Pagamento</h3>
                 💰 Transfere <b>${tx.total_to_pay} MZN</b> para o NIB acima.<br><br>
-                📲 Use o número <b>${phoneDigits}</b> para transferir. O número contrário dará erro de confirmação.<br><br>
+                📲 Use o número <b>${phoneDigits}</b> para transferir o dinheiro. O número contrário dará erro de confirmação.<br><br>
                 ⏳ Aguarde a mensagem de confirmação da MozeSMS no seu telemóvel.<br>
                 <div class="info-box">
                     ⚠️ O saldo será atualizado automaticamente após confirmação do pagamento.
                 </div>
             `;
 
-            // Iniciar contagem regressiva de 10 minutos
             iniciarContagem(600);
-
-            // Atualiza saldo imediatamente
             atualizarSaldo();
-
         } else {
             resultado.className = "error";
             resultado.innerHTML = "❌ Erro: " + JSON.stringify(result.detail);
