@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Gestão de Encontros do Coletivo</title>
+
+<style>
+body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
+
+.back-btn{
+    position:fixed;
+    top:20px;
+    left:20px;
+    font-size:22px;
+    cursor:pointer;
+    background:#06b6d4;
+    color:white;
+    padding:8px 12px;
+    border-radius:8px;
+    transition:0.3s;
+}
+.back-btn:hover{ background:#0891b2; }
+
+.container {
+    max-width:1200px;
+    margin:50px auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    overflow-x:auto;
+}
+
+h1 { text-align:center; margin-bottom:20px; }
+
+form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:30px; }
+
+form input {
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #cbd5e1;
+    flex:1;
+    min-width:200px;
+}
+
+form button {
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    background:#06b6d4;
+    color:white;
+    cursor:pointer;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+    min-width:1100px;
+}
+
+table th, table td {
+    border:1px solid #cbd5e1;
+    padding:10px;
+    font-size:14px;
+}
+
+table th {
+    background:#06b6d4;
+    color:white;
+}
+
+.actions button {
+    margin-right:5px;
+    padding:5px 10px;
+    border:none;
+    border-radius:4px;
+    cursor:pointer;
+}
+
+.actions .edit { background:#22c55e; color:white; }
+.actions .delete { background:#ef4444; color:white; }
+</style>
+</head>
+
+<body>
+
+<div class="back-btn" onclick="voltarPagina()">←</div>
+
+<div class="container">
+    <h1>Encontros do Coletivo</h1>
+
+    <form id="formEncontro">
+        <input type="hidden" id="encontroId">
+
+        <input type="text" id="titulo" placeholder="Ordem. Ex.: terceira" required>
+        <input type="text" id="descricao" placeholder="Descrição">
+        <input type="datetime-local" id="data_hora" required>
+
+        <button type="submit">Salvar</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ordem</th>
+                <th>Descrição</th>
+                <th>Data/Hora</th>
+                <th>Tipo</th>
+                <th>Status</th>
+                <th>Data Alerta</th>
+                <th>Data Convocatória</th>
+                <th>Alerta Enviado</th>
+                <th>Convocatória Enviada</th>
+                <th>Criado Em</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody id="encontrosBody"></tbody>
+    </table>
+</div>
+
+<script>
+
+// 🔥 ALTERADO PARA COLETIVO
+const API_BASE = "";
+
+// ==========================
+function voltarPagina(){
+    if(document.referrer !== ""){
+        window.history.back();
+    }else{
+        window.location.href = "/dap";
+    }
+}
+
+// ==========================
+function formatarData(dataStr){
+    if (!dataStr) return "";
+    return new Date(dataStr).toLocaleString();
+}
+
+function resetForm(){
+    formEncontro.reset();
+    encontroId.value = "";
+}
+
+// Função para remover acentos usando expressões regulares
+function removerAcentos(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Função para adicionar a remoção de acentos ao input de nome
+function addInputNoAcento(inputElement) {
+    inputElement.addEventListener('input', function () {
+        inputElement.value = removerAcentos(inputElement.value);
+    });
+}
+
+// ==========================
+async function listarEncontros(){
+    const res = await fetch(`${API_BASE}/coletivo/`);
+    const dados = await res.json();
+
+    const tbody = document.getElementById("encontrosBody");
+    tbody.innerHTML = "";
+
+    dados.forEach(e => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${e.id}</td>
+            <td>${e.titulo}</td>
+            <td>${e.descricao || ""}</td>
+            <td>${formatarData(e.data_hora)}</td>
+            <td>${e.tipo}</td>
+            <td>${e.status}</td>
+            <td>${formatarData(e.data_alerta)}</td>
+            <td>${formatarData(e.data_convocatoria)}</td>
+            <td>${e.alerta_enviado}</td>
+            <td>${e.convocatoria_enviada}</td>
+            <td>${formatarData(e.criado_em)}</td>
+            <td class="actions">
+                <button class="edit" onclick="editar(${e.id})">Editar</button>
+                <button class="delete" onclick="deletar(${e.id})">Cancelar</button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+// ==========================
+async function criarOuAtualizar(e){
+    e.preventDefault();
+
+    const id = encontroId.value;
+
+    const dt = new Date(data_hora.value);
+
+    const dataFormatada = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}T${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+
+    const dados = {
+        titulo: titulo.value,
+        descricao: descricao.value,
+        data_hora: dataFormatada
+    };
+
+    if(id){
+        await fetch(`${API_BASE}/coletivo/${id}`,{
+            method:"PUT",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(dados)
+        });
+    }else{
+        await fetch(`${API_BASE}/coletivo/`,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify(dados)
+        });
+    }
+
+    resetForm();
+    listarEncontros();
+}
+
+// ==========================
+async function editar(id){
+    const res = await fetch(`${API_BASE}/coletivo/${id}`);
+    const e = await res.json();
+
+    encontroId.value = e.id;
+    titulo.value = e.titulo;
+    descricao.value = e.descricao || "";
+
+    const dt = new Date(e.data_hora);
+
+    data_hora.value = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}T${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+}
+
+// ==========================
+async function deletar(id){
+    await fetch(`${API_BASE}/coletivo/${id}`,{ method:"DELETE" });
+    listarEncontros();
+}
+
+// ==========================
+formEncontro.addEventListener("submit", criarOuAtualizar);
+
+// carregar dados
+listarEncontros();
+
+// Adicionar a função de remover acentos no campo "titulo" ou qualquer outro input desejado
+addInputNoAcento(document.querySelector("#titulo"));
+
+</script>
+
+</body>
+</html>

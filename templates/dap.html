@@ -191,6 +191,8 @@ body{display:flex;background:#f1f5f9;}
     <div class="menu">
         <a onclick="criarContacto()">Gerenciar contactos-SMS</a>
         <a onclick="agendarEncontros()">Agendar encontros-SMS</a>
+        <a onclick="agendarEncontros_coletivo()">Agendar encontros do colectivo da direcção-SMS</a>
+        <a onclick="agendarOutros_encontros()">Agendar encontros com elementos/grupo específicos-SMS</a>
         <a onclick="criarInformacoes()">Enviar outras informacoes-SMS</a>
         <a onclick="criarAssistencias()">Fazer Plano de assistencias mútuas</a>
         <a onclick="criarAss_direccao()">Fazer Plano de assistencias de direccao</a>
@@ -266,6 +268,8 @@ document.getElementById("year").textContent = new Date().getFullYear();
 function voltarPagina(){ window.history.back(); }
 function abrirDadosAluno(){ window.location.href="/dados_aluno"; }
 function agendarEncontros(){ window.location.href="/encontros"; }
+function agendarEncontros_coletivo(){window.location.href="/encontros_coletivo";}
+function agendarOutros_encontros(){window.location.href="/outro_encontro";}
 function criarContacto(){ window.location.href="/contacto"; }
 function criarInformacoes(){ window.location.href="/informacoes"; }
 function criarAssistencias(){ window.location.href="/assistencia"; }
