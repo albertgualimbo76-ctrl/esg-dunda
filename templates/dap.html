@@ -25,11 +25,9 @@ body{
     color:white;
     padding:25px;
     position:relative;
-    height:100vh; /* ocupa toda a altura da tela */
-    overflow-y:auto; /* rolagem vertical se necessário */
+    height:100vh;
+    overflow-y:auto;
 }
-
-/* Personalização da barra de rolagem */
 .sidebar::-webkit-scrollbar {
     width:6px;
 }
@@ -37,8 +35,6 @@ body{
     background: rgba(255,255,255,0.3);
     border-radius:3px;
 }
-
-/* BOTÃO BACK */
 .back-btn{
     position:absolute;
     top:15px;
@@ -53,21 +49,16 @@ body{
 .back-btn:hover{
     background:rgba(255,255,255,0.4);
 }
-
 .logo{
     font-size:22px;
     font-weight:bold;
     margin:40px 0 40px 0;
 }
-
-/* Menu */
 .menu{
     display:flex;
     flex-direction:column;
     gap:12px;
 }
-
-/* Itens do menu */
 .menu a{
     text-decoration:none;
     color:white;
@@ -80,8 +71,6 @@ body{
 .menu a:hover{
     background:rgba(255,255,255,0.25);
 }
-
-/* Botão lateral Recarregar em vermelho */
 .menu a.recarregar-lateral{
     color:red;
     font-weight:bold;
@@ -90,8 +79,6 @@ body{
 .menu a.recarregar-lateral:hover{
     background:rgba(255,0,0,0.2);
 }
-
-/* MAIN */
 .main{
     flex:1;
     display:flex;
@@ -99,8 +86,6 @@ body{
     position:relative;
     overflow:hidden;
 }
-
-/* TOPBAR */
 .topbar{
     height:70px;
     background:white;
@@ -111,8 +96,6 @@ body{
     box-shadow:0 2px 8px rgba(0,0,0,0.05);
     z-index:2;
 }
-
-/* ÁREA CENTRAL */
 .painel{
     flex:1;
     display:flex;
@@ -131,8 +114,6 @@ body{
     color:#475569;
     font-size:18px;
 }
-
-/* FUNDO ANIMADO */
 .fundo-animado{
     position:absolute;
     width:100%;
@@ -142,7 +123,6 @@ body{
     overflow:hidden;
     z-index:1;
 }
-/* círculos animados */
 .fundo-animado span{
     position:absolute;
     display:block;
@@ -155,14 +135,11 @@ body{
 .fundo-animado span:nth-child(3){width:260px;height:260px;left:60%;animation-duration:28s;}
 .fundo-animado span:nth-child(4){width:180px;height:180px;left:80%;animation-duration:22s;}
 .fundo-animado span:nth-child(5){width:120px;height:120px;left:50%;animation-duration:16s;}
-
 @keyframes flutuar{
     0%{transform:translateY(100vh) scale(0.8);opacity:0;}
     20%{opacity:1;}
     100%{transform:translateY(-120vh) scale(1.2);opacity:0;}
 }
-
-/* FOOTER */
 .footer{
     padding:12px 30px;
     font-size:13px;
@@ -171,8 +148,6 @@ body{
     text-align:right;
     z-index:2;
 }
-
-/* Estilo para o contador de SMS */
 #smsCount {
     color: #475569;
     font-weight: bold;
@@ -184,8 +159,6 @@ body{
     right: 30px;
     top: 0px;
 }
-
-/* Estilo para o link Recarregar superior em amarelo */
 .recarregar-topbar {
     color: #ffcc00;
     font-weight: bold;
@@ -201,12 +174,8 @@ body{
 </head>
 
 <body>
-
-<!-- SIDEBAR -->
 <div class="sidebar">
-    <!-- BOTÃO VOLTAR -->
     <div class="back-btn" onclick="voltarPagina()">⬅️</div>
-
     <div class="logo">🏫 ESG-DUNDA</div>
 
     <div class="menu">
@@ -217,17 +186,13 @@ body{
         <a onclick="criarInformacoes()">Enviar outras informacoes-SMS</a>
         <a onclick="criarAssistencias()">Fazer Plano de assistencias mútuas</a>
         <a onclick="criarAss_direccao()">Fazer Plano de assistencias de direccao</a>
-        <!-- Botão Recarregar SMS do menu lateral -->
         <a onclick="recarregarSMS()" class="recarregar-lateral">💳 Recarregar SMS</a>
     </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
-
     <div class="topbar">
         <div></div>
-        <!-- Saldo de SMS e link recarregar -->
         <div id="smsCount">
             <span id="smsText">Saldo SMS: Carregando...</span>
             <br>
@@ -235,16 +200,10 @@ body{
         </div>
     </div>
 
-    <!-- FUNDO ANIMADO -->
     <div class="fundo-animado">
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
-        <span></span>
+        <span></span><span></span><span></span><span></span><span></span>
     </div>
 
-    <!-- TEXTO CENTRAL -->
     <div class="painel">
         <div>
             <h2>Bem-vindo ao painel</h2>
@@ -255,14 +214,11 @@ body{
     <div class="footer">
         © <span id="year"></span> Proempy Services
     </div>
-
 </div>
 
 <script>
-// Token para API
 const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
 
-// Atualiza o saldo automaticamente
 async function consultarSaldo() {
     const url = "https://api.mozesms.com/v1/account/balance";
 
@@ -272,9 +228,12 @@ async function consultarSaldo() {
         const data = await response.json();
         if (data.success) {
             const saldo = data.data.balance;
-            const smsEquivalentes = saldo * (71/98.85);
-            document.getElementById('smsText').textContent = `Saldo SMS: ${smsEquivalentes.toFixed()}`;
-            document.getElementById('recarregarLink').style.display = (smsEquivalentes <=100) ? 'inline':'none';
+
+            // Mostra apenas a parte inteira, sem arredondar
+            const smsEquivalentes = Math.floor(saldo * (1 / 1.356));
+
+            document.getElementById('smsText').textContent = `Saldo SMS: ${smsEquivalentes}`;
+            document.getElementById('recarregarLink').style.display = (smsEquivalentes <= 100) ? 'inline' : 'none';
         } else {
             throw new Error('Falha ao obter o saldo');
         }
@@ -283,25 +242,20 @@ async function consultarSaldo() {
     }
 }
 
-// Funções de navegação
 document.getElementById("year").textContent = new Date().getFullYear();
-
 function voltarPagina(){ window.history.back(); }
 function abrirDadosAluno(){ window.location.href="/dados_aluno"; }
 function agendarEncontros(){ window.location.href="/encontros"; }
-function agendarEncontros_coletivo(){window.location.href="/encontros_coletivo";}
-function agendarOutros_encontros(){ window.location.href="/outro_encontro";}
+function agendarEncontros_coletivo(){ window.location.href="/encontros_coletivo"; }
+function agendarOutros_encontros(){ window.location.href="/outro_encontro"; }
 function criarContacto(){ window.location.href="/contacto"; }
 function criarInformacoes(){ window.location.href="/informacoes"; }
 function criarAssistencias(){ window.location.href="/assistencia"; }
 function criarAss_direccao(){ window.location.href="/ass_direccao"; }
-
-// Recarregar SMS pelo menu
 function recarregarSMS(){ window.location.href="/comprar_creditos"; }
 
-// Iniciar consulta saldo e atualizar a cada 10s
 window.onload = consultarSaldo;
-setInterval(consultarSaldo,10000);
+setInterval(consultarSaldo, 10000);
 </script>
 
 </body>
