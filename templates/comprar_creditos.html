@@ -6,6 +6,26 @@
 
 <style>
 body { font-family: Arial, sans-serif; background: #f4f6f9; }
+
+/* BOTÃO VOLTAR */
+.back-btn{
+position:fixed;
+top:20px;
+left:20px;
+font-size:20px;
+cursor:pointer;
+background:#06b6d4;
+color:white;
+padding:8px 12px;
+border-radius:8px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+transition:.3s;
+z-index:1000;
+}
+.back-btn:hover{
+background:#0891b2;
+}
+
 .container { width: 420px; margin: 60px auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
 h2 { text-align: center; }
 label { margin-top: 15px; display:block; }
@@ -24,6 +44,9 @@ button:hover { background: #218838; }
 </head>
 
 <body>
+
+<!-- BOTÃO VOLTAR -->
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
 
 <div class="container">
     <h2>💳 Comprar Créditos SMS</h2>
@@ -55,6 +78,12 @@ button:hover { background: #218838; }
 </div>
 
 <script>
+
+/* BOTÃO VOLTAR */
+function voltarPagina(){
+    window.history.back();
+}
+
 const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
 
 const form = document.getElementById("formCompra");
@@ -69,12 +98,10 @@ const smsEstimadoEl = document.getElementById("smsEstimado");
 
 const VALOR_MIN = 250;
 
-// Mostrar campo telefone
 gateway.addEventListener("change", () => {
     phoneField.style.display = (gateway.value === "mpesa" || gateway.value === "emola") ? "block" : "none";
 });
 
-// Atualizar saldo automaticamente da MozeSMS
 async function atualizarSaldo() {
     try {
         const res = await fetch("https://api.mozesms.com/v1/account/balance", {
@@ -92,11 +119,9 @@ async function atualizarSaldo() {
     }
 }
 
-// Atualiza a cada 5 segundos
 setInterval(atualizarSaldo, 5000);
 window.onload = atualizarSaldo;
 
-// Função de contagem regressiva com alerta
 function iniciarContagem(segundos) {
     let tempo = segundos;
     contadorEl.style.display = "block";
@@ -114,11 +139,10 @@ function iniciarContagem(segundos) {
     }, 1000);
 }
 
-// Atualizar estimativa de SMS ao digitar
 function atualizarSmsEstimado() {
     const valor = parseFloat(amountInput.value) || 0;
     if(valor > 0){
-        const sms = Math.floor(valor / 1.356); // Cada SMS custa 1.356 MZN
+        const sms = Math.floor(valor / 1.356);
         smsEstimadoEl.innerText = `O valor digitado é para pagar ${sms} SMS`;
         smsEstimadoEl.style.display = "block";
     } else {
@@ -127,7 +151,6 @@ function atualizarSmsEstimado() {
 }
 amountInput.addEventListener("input", atualizarSmsEstimado);
 
-// Enviar formulário
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -172,11 +195,8 @@ form.addEventListener("submit", async (e) => {
                 <b>Banco:</b> Nedbank (Ned)<br><br>
                 <h3>Instruções de Pagamento</h3>
                 💰 Transfere <b>${tx.total_to_pay} MZN</b> para o NIB acima.<br><br>
-                📲 Use o número <b>${phoneDigits}</b> para transferir o dinheiro. O número contrário dará erro de confirmação.<br><br>
-                ⏳ Aguarde a mensagem de confirmação da MozeSMS no seu telemóvel.<br>
-                <div class="info-box">
-                    ⚠️ O saldo será atualizado automaticamente após confirmação do pagamento.
-                </div>
+                📲 Use o número <b>${phoneDigits}</b> para transferir o dinheiro. O número contrário dará erro de confirmação automática<br><br>
+                ⏳ Aguarde a mensagem de confirmação da MozeSMS no seu telemóvel.
             `;
 
             iniciarContagem(600);
