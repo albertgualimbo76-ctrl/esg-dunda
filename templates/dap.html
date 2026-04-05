@@ -3,11 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <title>ESG-DUNDA</title>
-
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
-html,body{height:100%;}
-body{display:flex;background:#f1f5f9;}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI',sans-serif;
+}
+html,body{
+    height:100%;
+}
+body{
+    display:flex;
+    background:#f1f5f9;
+}
 
 /* SIDEBAR */
 .sidebar{
@@ -16,6 +25,17 @@ body{display:flex;background:#f1f5f9;}
     color:white;
     padding:25px;
     position:relative;
+    height:100vh; /* ocupa toda a altura da tela */
+    overflow-y:auto; /* rolagem vertical se necessário */
+}
+
+/* Personalização da barra de rolagem */
+.sidebar::-webkit-scrollbar {
+    width:6px;
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.3);
+    border-radius:3px;
 }
 
 /* BOTÃO BACK */
@@ -34,7 +54,11 @@ body{display:flex;background:#f1f5f9;}
     background:rgba(255,255,255,0.4);
 }
 
-.logo{font-size:22px;font-weight:bold;margin:40px 0 40px 0;}
+.logo{
+    font-size:22px;
+    font-weight:bold;
+    margin:40px 0 40px 0;
+}
 
 /* Menu */
 .menu{
@@ -53,7 +77,9 @@ body{display:flex;background:#f1f5f9;}
     cursor:pointer;
     transition:0.2s;
 }
-.menu a:hover{background:rgba(255,255,255,0.25);}
+.menu a:hover{
+    background:rgba(255,255,255,0.25);
+}
 
 /* Botão lateral Recarregar em vermelho */
 .menu a.recarregar-lateral{
@@ -96,13 +122,11 @@ body{display:flex;background:#f1f5f9;}
     z-index:2;
     text-align:center;
 }
-
 .painel h2{
     font-size:28px;
     color:#0f172a;
     margin-bottom:10px;
 }
-
 .painel p{
     color:#475569;
     font-size:18px;
@@ -118,7 +142,6 @@ body{display:flex;background:#f1f5f9;}
     overflow:hidden;
     z-index:1;
 }
-
 /* círculos animados */
 .fundo-animado span{
     position:absolute;
@@ -127,7 +150,6 @@ body{display:flex;background:#f1f5f9;}
     background:rgba(6,182,212,0.25);
     animation:flutuar linear infinite;
 }
-
 .fundo-animado span:nth-child(1){width:220px;height:220px;left:10%;animation-duration:25s;}
 .fundo-animado span:nth-child(2){width:150px;height:150px;left:30%;animation-duration:18s;}
 .fundo-animado span:nth-child(3){width:260px;height:260px;left:60%;animation-duration:28s;}
@@ -182,7 +204,6 @@ body{display:flex;background:#f1f5f9;}
 
 <!-- SIDEBAR -->
 <div class="sidebar">
-
     <!-- BOTÃO VOLTAR -->
     <div class="back-btn" onclick="voltarPagina()">⬅️</div>
 
@@ -206,7 +227,6 @@ body{display:flex;background:#f1f5f9;}
 
     <div class="topbar">
         <div></div>
-
         <!-- Saldo de SMS e link recarregar -->
         <div id="smsCount">
             <span id="smsText">Saldo SMS: Carregando...</span>
@@ -235,6 +255,7 @@ body{display:flex;background:#f1f5f9;}
     <div class="footer">
         © <span id="year"></span> Proempy Services
     </div>
+
 </div>
 
 <script>
@@ -269,7 +290,7 @@ function voltarPagina(){ window.history.back(); }
 function abrirDadosAluno(){ window.location.href="/dados_aluno"; }
 function agendarEncontros(){ window.location.href="/encontros"; }
 function agendarEncontros_coletivo(){window.location.href="/encontros_coletivo";}
-function agendarOutros_encontros(){window.location.href="/outro_encontro";}
+function agendarOutros_encontros(){ window.location.href="/outro_encontro";}
 function criarContacto(){ window.location.href="/contacto"; }
 function criarInformacoes(){ window.location.href="/informacoes"; }
 function criarAssistencias(){ window.location.href="/assistencia"; }
@@ -281,7 +302,6 @@ function recarregarSMS(){ window.location.href="/comprar_creditos"; }
 // Iniciar consulta saldo e atualizar a cada 10s
 window.onload = consultarSaldo;
 setInterval(consultarSaldo,10000);
-
 </script>
 
 </body>
