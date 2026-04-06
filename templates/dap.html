@@ -28,13 +28,20 @@ body{
     height:100vh;
     overflow-y:auto;
 }
+
+/* SCROLLBAR VERMELHA SEM MUDANÇA AO HOVER */
 .sidebar::-webkit-scrollbar {
-    width:6px;
+    width:12px; /* largura fixa e sempre grossa */
 }
 .sidebar::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.3);
+    background: #ff0000; /* vermelho sólido */
     border-radius:3px;
+    border: 2px solid #f1f5f9; /* borda para destacar */
 }
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #cc0000; /* vermelho mais escuro ao passar o mouse */
+}
+
 .back-btn{
     position:absolute;
     top:15px;
@@ -79,6 +86,7 @@ body{
 .menu a.recarregar-lateral:hover{
     background:rgba(255,0,0,0.2);
 }
+
 .main{
     flex:1;
     display:flex;
@@ -148,6 +156,7 @@ body{
     text-align:right;
     z-index:2;
 }
+
 #smsCount {
     color: #475569;
     font-weight: bold;
@@ -221,17 +230,13 @@ const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmY
 
 async function consultarSaldo() {
     const url = "https://api.mozesms.com/v1/account/balance";
-
     try {
         const response = await fetch(url, {method:'GET', headers:{'Authorization':`Bearer ${token}`}});
         if (!response.ok) throw new Error('Erro ao consultar saldo');
         const data = await response.json();
         if (data.success) {
             const saldo = data.data.balance;
-
-            // Mostra apenas a parte inteira, sem arredondar
             const smsEquivalentes = Math.floor(saldo * (1 / 1.356));
-
             document.getElementById('smsText').textContent = `Saldo SMS: ${smsEquivalentes}`;
             document.getElementById('recarregarLink').style.display = (smsEquivalentes <= 100) ? 'inline' : 'none';
         } else {
@@ -243,6 +248,7 @@ async function consultarSaldo() {
 }
 
 document.getElementById("year").textContent = new Date().getFullYear();
+
 function voltarPagina(){ window.history.back(); }
 function abrirDadosAluno(){ window.location.href="/dados_aluno"; }
 function agendarEncontros(){ window.location.href="/encontros"; }
