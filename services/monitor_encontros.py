@@ -8,22 +8,16 @@ from models.encontro import Encontro
 from routers.contactos import tipo_tabela
 
 
-# ==========================
+# ========================
 # 📩 Envio de SMS usando endpoint
-# ==========================
+# ========================
 async def enviar_sms_api(mensagem, numeros):
-    """
-    Envia SMS usando endpoint /sms/enviar
-    Aceita número único ou lista de números
-    """
-
     base_url = os.getenv("RENDER_EXTERNAL_URL")
     if not base_url:
         base_url = "http://127.0.0.1:8000"
 
     url = f"{base_url}/sms/enviar"
 
-    # Garantir que numeros é sempre lista
     if not isinstance(numeros, list):
         numeros = [numeros]
 
@@ -56,14 +50,9 @@ async def enviar_sms_api(mensagem, numeros):
 
 
 # ==========================
-# 📞 Pegar números da tabela de contactos
+# 📞 Pegar números
 # ==========================
 async def pegar_numeros(tipo):
-    """
-    Retorna lista de números de telefone por tipo:
-    diretor, adjunto, professores, funcionarios, direcao
-    """
-
     if tipo not in tipo_tabela:
         return []
 
@@ -74,7 +63,10 @@ async def pegar_numeros(tipo):
         contactos = result.scalars().all()
 
         numeros = [c.telefone for c in contactos if c.telefone]
-        print(f"📞 Números encontrados para {tipo}:", numeros)
+
+        print(f"\n📞 [LOG] Tipo: {tipo}")
+        print(f"📞 [LOG] Quantidade: {len(numeros)}")
+        print(f"📞 [LOG] Números: {numeros}\n")
 
         return numeros
 
@@ -86,19 +78,10 @@ async def monitorar_encontros():
     print("🔄 Monitor automático de encontros iniciado")
 
     while True:
-        # Obtém a hora atual
         agora = datetime.now()
 
-        # Calcula o tempo até o início da próxima hora
-        proxima_hora = (agora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
-        tempo_ate_proxima_hora = (proxima_hora - agora).total_seconds()
+        print(f"\n📅 Verificando encontros em {agora}")
 
-        print(f"\n📅 Verificando encontros em {agora}, próxima verificação às {proxima_hora}")
-
-        # Espera até o início da próxima hora
-        await asyncio.sleep(tempo_ate_proxima_hora)
-
-        # Inicia o processo de verificação de encontros
         async with SessionLocal() as db:
             result = await db.execute(
                 select(Encontro).where(Encontro.status == "APROVADO")
@@ -112,6 +95,8 @@ async def monitorar_encontros():
                 momento_alerta = encontro.data_hora - timedelta(days=2)
 
                 if encontro.alerta_enviado == "NAO" and agora >= momento_alerta:
+                    print(f"\n🔔 Enviando ALERTA para encontro {encontro.id}")
+
                     if encontro.tipo == "PROFESSORES":
                         numeros_alerta = await pegar_numeros("diretor")
                     elif encontro.tipo == "FUNCIONARIOS":
@@ -120,12 +105,13 @@ async def monitorar_encontros():
                         continue
 
                     if numeros_alerta:
+                        print("📤 [ALERTA] Números destino:", numeros_alerta)
+
                         mensagem_alerta = (
                             f"Saudacoes, ha um encontro referente a "
                             f"{encontro.titulo}, agendado para "
                             f"{encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h. "
-                            f"Se pretende adiar ou cancelar, contacte o sr Luis Maquina. "
-                            f"Enviado por sistema."
+                            f"Se pretende adiar ou cancelar, entre no sistema."
                         )
 
                         sucesso = await enviar_sms_api(
@@ -140,6 +126,7 @@ async def monitorar_encontros():
                                 .values(alerta_enviado="SIM")
                             )
                             await db.commit()
+
                             print(f"✅ Alerta marcado como SIM (Encontro {encontro.id})")
                         else:
                             print(f"❌ Falha no envio do alerta {encontro.id}")
@@ -150,6 +137,8 @@ async def monitorar_encontros():
                 momento_convocatoria = encontro.data_hora - timedelta(days=1)
 
                 if encontro.convocatoria_enviada == "NAO" and agora >= momento_convocatoria:
+                    print(f"\n📢 Enviando CONVOCATÓRIA para encontro {encontro.id}")
+
                     if encontro.tipo == "PROFESSORES":
                         numeros_convocatoria = await pegar_numeros("professores")
                         mensagem_convocatoria = (
@@ -171,9 +160,10 @@ async def monitorar_encontros():
                             f"na sala de reuniao. Pede-se pontualidade. "
                             f"DE: Alberto Luis Gualimbo"
                         )
-
                     else:
                         continue
+
+                    print("📤 [CONVOCATORIA] Números destino:", numeros_convocatoria)
 
                     enviados = 0
                     total = len(numeros_convocatoria)
@@ -187,7 +177,7 @@ async def monitorar_encontros():
                         if sucesso:
                             enviados += 1
 
-                        await asyncio.sleep(5)  # reduzir para 5s entre os envios
+                        await asyncio.sleep(5)
 
                     if total > 0 and enviados == total:
                         await db.execute(
@@ -201,13 +191,13 @@ async def monitorar_encontros():
                     else:
                         print(f"❌ Nem todos SMS foram enviados ({enviados}/{total})")
 
-        # Espera até o início da próxima hora
-        await asyncio.sleep(tempo_ate_proxima_hora)
+        # ⏱️ Espera 60 segundos (mais confiável que 1 hora)
+        await asyncio.sleep(3600)
 
 
-# ==========================
-# Inicializa o monitor
-# ==========================
+# =====================
+# Inicializa
+# =====================
 async def main():
     await monitorar_encontros()
 
