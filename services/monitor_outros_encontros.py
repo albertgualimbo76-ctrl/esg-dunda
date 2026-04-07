@@ -4,8 +4,13 @@ from datetime import datetime, timedelta
 import httpx
 from sqlalchemy import select, update
 from database import SessionLocal
-from models.outros_encontros import OutroEncontro  # sua tabela
+from models.outros_encontros import OutroEncontro
 from routers.contactos import tipo_tabela
+
+# ==========================
+# ⏱️ Intervalo de verificação (em segundos)
+# ==========================
+INTERVALO_VERIFICACAO = 3600  # 1 hora
 
 # ==========================
 # 📩 Envio de SMS usando endpoint
@@ -56,11 +61,6 @@ async def monitorar_outros_encontros():
 
     while True:
         agora = datetime.now()
-        proxima_hora = (agora.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1))
-        tempo_ate_proxima_hora = (proxima_hora - agora).total_seconds()
-
-        # Espera até o início da próxima hora
-        await asyncio.sleep(tempo_ate_proxima_hora)
 
         async with SessionLocal() as db:
             result = await db.execute(
@@ -68,21 +68,27 @@ async def monitorar_outros_encontros():
             )
             encontros = result.scalars().all()
 
+            print(f"\n📅 Verificação em: {agora} | Encontros encontrados: {len(encontros)}")
+
             for encontro in encontros:
 
                 # ==========================
                 # 🔔 ALERTA (2 dias antes)
                 # ==========================
                 momento_alerta = encontro.data_hora - timedelta(days=2)
+
                 if encontro.alerta_enviado == "NAO" and agora >= momento_alerta:
                     numeros_alerta = await pegar_numeros("diretor")
+
                     if numeros_alerta:
                         mensagem_alerta = (
                             f"Saudacoes, ha um encontro referente a {encontro.titulo}, "
                             f"agendado para {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h. "
                             f"Se pretende adiar ou cancelar, entre no sistema."
                         )
+
                         sucesso = await enviar_sms_api(mensagem_alerta, numeros_alerta)
+
                         if sucesso:
                             await db.execute(
                                 update(OutroEncontro)
@@ -90,22 +96,30 @@ async def monitorar_outros_encontros():
                                 .values(alerta_enviado="SIM")
                             )
                             await db.commit()
+                            print(f"✅ Alerta enviado (ID {encontro.id})")
 
                 # ==========================
                 # 📢 CONVOCATÓRIA (1 dia antes)
                 # ==========================
                 momento_convocatoria = encontro.data_hora - timedelta(days=1)
+
                 if encontro.convocatoria_enviada == "NAO" and agora >= momento_convocatoria:
                     enviados = 0
                     total = len(encontro.contactos)
+
                     for nome, numero in zip(encontro.nomes, encontro.contactos):
                         mensagem_convocatoria = (
-                            f"Saudacoes sr(a) {nome}, esta convocado(a) para um encontro de {encontro.titulo}, a ter lugar no dia {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h, no(a) {encontro.local}. Pede-se pontualidade."
+                            f"Saudacoes sr(a) {nome}, esta convocado(a) para um encontro de {encontro.titulo}, "
+                            f"a ter lugar no dia {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h, "
+                            f"no(a) {encontro.local}. Pede-se pontualidade."
                         )
+
                         sucesso = await enviar_sms_api(mensagem_convocatoria, numero)
+
                         if sucesso:
                             enviados += 1
-                        await asyncio.sleep(5)  # intervalo entre envios
+
+                        await asyncio.sleep(5)
 
                     if total > 0 and enviados == total:
                         await db.execute(
@@ -114,6 +128,13 @@ async def monitorar_outros_encontros():
                             .values(convocatoria_enviada="SIM")
                         )
                         await db.commit()
+                        print(f"✅ Convocatória enviada (ID {encontro.id})")
+
+        # ==========================
+        # ⏳ Aguardar intervalo fixo
+        # ==========================
+        print(f"⏳ Aguardando {INTERVALO_VERIFICACAO} segundos...")
+        await asyncio.sleep(INTERVALO_VERIFICACAO)
 
 # ==========================
 # Inicializa monitor
