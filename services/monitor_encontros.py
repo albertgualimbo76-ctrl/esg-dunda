@@ -192,7 +192,7 @@ async def monitorar_encontros():
                         print(f"❌ Nem todos SMS foram enviados ({enviados}/{total})")
 
         # ⏱️ Espera 60 segundos (mais confiável que 1 hora)
-        await asyncio.sleep(3600)
+        await asyncio.sleep(60)
 
 
 # =====================
