@@ -9,7 +9,7 @@ from models.contactos_professores import ContactoProfessor
 from models.contactos_diretor import ContactoDiretor
 
 # Intervalo de verificação do loop (em segundos)
-INTERVALO_VERIFICACAO = 3600
+INTERVALO_VERIFICACAO = 60
 
 
 # ==========================
