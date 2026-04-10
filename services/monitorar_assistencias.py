@@ -10,7 +10,7 @@ from models.contactos_professores import ContactoProfessor
 # ==========================
 # ⏱️ Intervalo de verificação (em segundos)
 # ==========================
-INTERVALO_VERIFICACAO = 3600  # 1 hora
+INTERVALO_VERIFICACAO = 60  # 1 hora
 
 # ==========================
 # 📩 Função para enviar SMS via endpoint
