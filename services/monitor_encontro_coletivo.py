@@ -144,7 +144,7 @@ async def monitorar_encontros_coletivo():
         # ==========================
         # Loop a cada 1 minuto
         # ==========================
-        await asyncio.sleep(3600)
+        await asyncio.sleep(60)
 
 
 # ==========================
