@@ -10,7 +10,7 @@ from routers.contactos import tipo_tabela
 # ==========================
 # ⏱️ Intervalo de verificação (em segundos)
 # ==========================
-INTERVALO_VERIFICACAO = 3600  # 1 hora
+INTERVALO_VERIFICACAO = 60  # 1 hora
 
 # ==========================
 # 📩 Envio de SMS usando endpoint
