@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Outros Encontros</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f1f5f9; margin:0; padding:0; }
+.back-btn{ position:fixed; top:20px; left:20px; font-size:22px; cursor:pointer; background:#06b6d4; color:white; padding:8px 12px; border-radius:8px; transition:0.3s; z-index:1000; }
+.back-btn:hover{ background:#0891b2; }
+.container { max-width:1200px; margin:50px auto; background:white; padding:30px; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,0.1); overflow-x:auto; }
+h1 { text-align:center; margin-bottom:20px; color:#0f172a; }
+form { display:flex; flex-wrap:wrap; gap:15px; margin-bottom:10px; }
+form input, form button.add-contacto, form button[type="submit"] { padding:10px; border-radius:6px; border:1px solid #cbd5e1; flex:1; min-width:200px; box-sizing:border-box; height:42px; }
+form button { padding:10px 20px; border:none; border-radius:6px; background:#06b6d4; color:white; cursor:pointer; transition:.3s; }
+form button:hover { background:#0891b2; }
+form button.add-contacto { flex:0 0 200px; background:#22c55e; color:white; border:none; }
+form button.add-contacto:hover { background:#16a34a; }
+#feedback { color: #b91c1c; font-weight: bold; margin-bottom:10px; min-height:18px; }
+table { width:100%; border-collapse:collapse; margin-top:20px; min-width:1400px; }
+table th, table td { border:1px solid #cbd5e1; padding:10px; text-align:left; font-size:14px; vertical-align: top; }
+table th { background:#06b6d4; color:white; }
+.actions button { margin-right:5px; padding:5px 10px; border:none; border-radius:4px; cursor:pointer; }
+.actions .edit { background:#22c55e; color:white; }
+.actions .delete { background:#ef4444; color:white; }
+.contact-row { display:flex; gap:10px; margin-bottom:5px; align-items:center; }
+.contact-row input { flex:1; padding:10px; border-radius:6px; border:1px solid #cbd5e1; }
+.contact-row button { flex:0 0 auto; background:#ef4444; color:white; border:none; border-radius:4px; padding:5px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="back-btn" onclick="voltarPagina()">←</div>
+<div class="container">
+<h1>Agendar outros encontros com elementos ou grupo especificos</h1>
+
+<div id="feedback"></div>
+
+<form id="formEncontro">
+    <input type="hidden" id="encontroId">
+    <input type="text" id="titulo" placeholder="Titulo do Encontro" required>
+    <input type="text" id="descricao" placeholder="Descricao">
+    <input type="text" id="local" placeholder="Local. Ex.: Gabinete, sala 2" required>
+    <input type="datetime-local" id="data_hora" required>
+
+    <div id="contactosContainer"></div>
+    <button type="button" class="add-contacto" onclick="adicionarContacto()">+ Adicionar Contacto</button>
+    <button type="submit">Salvar</button>
+</form>
+
+<table>
+<thead>
+<tr>
+    <th>ID</th>
+    <th>Titulo</th>
+    <th>Descricao</th>
+    <th>Local</th>
+    <th>Data/Hora</th>
+    <th>Nomes</th>
+    <th>Contactos</th>
+    <th>Status</th>
+    <th>Data Alerta</th>
+    <th>Data Convocatoria</th>
+    <th>Alerta Enviado</th>
+    <th>Convocatoria Enviada</th>
+    <th>Criado Em</th>
+    <th>Acoes</th>
+</tr>
+</thead>
+<tbody id="encontrosBody"></tbody>
+</table>
+</div>
+
+<script>
+function voltarPagina() {
+    if (document.referrer !== "") {
+        window.history.back();
+    } else {
+        window.location.href = "/dap";
+    }
+}
+
+const API_BASE = "/outros_encontros";
+const feedback = document.getElementById("feedback");
+
+function resetForm() {
+    formEncontro.reset();
+    encontroId.value = "";
+    document.getElementById("contactosContainer").innerHTML = "";
+    feedback.textContent = "";
+}
+
+function formatarData(d) {
+    return d ? new Date(d).toLocaleString() : "";
+}
+
+// Funcao para remover acentos
+function removerAcentos(str) {
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Aplica remover acentos nos inputs
+function addInputNoAcento(input) {
+    input.addEventListener("input", e => {
+        const pos = input.selectionStart;
+        input.value = removerAcentos(input.value);
+        input.setSelectionRange(pos, pos);
+    });
+}
+
+// Aplica nos campos principais
+[titulo, descricao, local].forEach(addInputNoAcento);
+
+// Adiciona contacto (nome + telefone)
+function adicionarContacto(nome = "", telefone = "") {
+    const container = document.getElementById("contactosContainer");
+    const div = document.createElement("div");
+    div.className = "contact-row";
+    div.innerHTML = `
+        <input type="text" placeholder="Nome" value="${nome}" class="c_nome" required>
+        <input type="text" placeholder="Telefone (9 digitos)" value="${telefone.replace(/^258/, '')}" class="c_telefone" maxlength="9" required
+               oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+        <button type="button" onclick="this.parentElement.remove()">X</button>
+    `;
+    container.appendChild(div);
+
+    // remove acentos no input do nome
+    addInputNoAcento(div.querySelector(".c_nome"));
+}
+
+async function listarEncontros() {
+    try {
+        const res = await fetch(`${API_BASE}/`);
+        const dados = await res.json();
+        const tbody = document.getElementById("encontrosBody");
+        tbody.innerHTML = "";
+        dados.forEach(e => {
+            const tr = document.createElement("tr");
+            const nomes = e.nomes.join(", ");
+            const contactos = e.contactos.join(", ");
+            tr.innerHTML = `<td>${e.id}</td>
+                <td>${e.titulo}</td>
+                <td>${e.descricao || ""}</td>
+                <td>${e.local || ""}</td>
+                <td>${formatarData(e.data_hora)}</td>
+                <td>${nomes}</td>
+                <td>${contactos}</td>
+                <td>${e.status}</td>
+                <td>${formatarData(e.data_alerta)}</td>
+                <td>${formatarData(e.data_convocatoria)}</td>
+                <td>${e.alerta_enviado}</td>
+                <td>${e.convocatoria_enviada}</td>
+                <td>${formatarData(e.criado_em)}</td>
+                <td class="actions">
+                    <button class="edit" onclick="editar(${e.id})">Editar</button>
+                    <button class="delete" onclick="deletar(${e.id})">Deletar</button>
+                </td>`;
+            tbody.appendChild(tr);
+        });
+    } catch(err) {
+        console.error("Erro ao listar encontros:", err);
+    }
+}
+
+async function criarOuAtualizarEncontro(e) {
+    e.preventDefault();
+    feedback.textContent = "";
+
+    const container = document.getElementById("contactosContainer");
+    const contactRows = container.querySelectorAll(".contact-row");
+
+    if (contactRows.length === 0) {
+        feedback.textContent = "Adicione pelo menos um contacto antes de salvar.";
+        return;
+    }
+
+    const id = encontroId.value;
+    const nomes = [];
+    const contactos = [];
+
+    contactRows.forEach(r => {
+        nomes.push(r.querySelector(".c_nome").value);
+        contactos.push("258" + r.querySelector(".c_telefone").value);
+    });
+
+    const dados = {
+        titulo: titulo.value,
+        descricao: descricao.value,
+        local: local.value,
+        data_hora: data_hora.value,
+        nomes,
+        contactos
+    };
+
+    try {
+        if (id) {
+            await fetch(`${API_BASE}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            });
+        } else {
+            await fetch(`${API_BASE}/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(dados)
+            });
+        }
+    } catch(err) {
+        console.error("Erro ao salvar:", err);
+        feedback.textContent = "Erro ao salvar o encontro.";
+        return;
+    }
+
+    resetForm();
+    listarEncontros();
+}
+
+async function editar(id) {
+    const res = await fetch(`${API_BASE}/${id}`);
+    const e = await res.json();
+    encontroId.value = e.id;
+    titulo.value = e.titulo;
+    descricao.value = e.descricao || "";
+    local.value = e.local || "";
+    data_hora.value = e.data_hora;
+
+    const container = document.getElementById("contactosContainer");
+    container.innerHTML = "";
+    e.nomes.forEach((nome, i) => adicionarContacto(nome, e.contactos[i].replace(/^258/, '')));
+}
+
+async function deletar(id) {
+    await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+    listarEncontros();
+}
+
+document.getElementById("formEncontro").addEventListener("submit", criarOuAtualizarEncontro);
+
+// Lista encontros ao carregar
+listarEncontros();
+
+// Atualiza a tabela automaticamente a cada 5 segundos
+setInterval(listarEncontros, 5000);
+
+</script>
+</body>
+</html>

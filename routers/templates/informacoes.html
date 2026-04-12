@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>Envio de SMS</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#f1f5f9;
+    margin:0;
+    padding:0;
+}
+
+/* BOTÃO VOLTAR */
+.back-btn{
+    position:fixed;
+    top:20px;
+    left:20px;
+    font-size:20px;
+    cursor:pointer;
+    background:#06b6d4;
+    color:white;
+    padding:8px 12px;
+    border-radius:8px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    transition:.3s;
+    z-index:1000;
+}
+.back-btn:hover{
+    background:#0891b2;
+}
+
+.container {
+    max-width:900px;
+    margin:50px auto;
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.checkbox-group {
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+}
+
+textarea, input[type="text"] {
+    width:100%;
+    padding:10px;
+    border-radius:6px;
+    border:1px solid #cbd5e1;
+    margin-bottom:10px;
+    font-family:inherit;
+    font-size:14px;
+}
+
+textarea {
+    height:120px;
+    resize:none;
+    margin-bottom:20px;
+}
+
+button {
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    background:#06b6d4;
+    color:white;
+    cursor:pointer;
+}
+
+button:disabled {
+    background:#94a3b8;
+    cursor:not-allowed;
+}
+
+.status {
+    margin-top:15px;
+    font-weight:bold;
+    white-space: pre-line;
+}
+</style>
+</head>
+<body>
+
+<!-- BOTÃO VOLTAR -->
+<div class="back-btn" onclick="voltarPagina()">⬅️</div>
+
+<div class="container">
+
+<h1>Enviar SMS</h1>
+
+<form id="formMensagem">
+
+<div class="checkbox-group">
+    <label><input type="checkbox" name="tipo" value="diretor"> Diretor</label>
+    <label><input type="checkbox" name="tipo" value="direcao"> Direção</label>
+    <label><input type="checkbox" name="tipo" value="professores"> Professores</label>
+    <label><input type="checkbox" name="tipo" value="funcionarios"> Funcionários</label>
+</div>
+
+<label>Contactos extras (9 dígitos separados por vírgula)</label>
+<input type="text" id="contactosExtras" placeholder="841234567, 871112233">
+
+<label>Mensagem</label>
+<textarea id="mensagem" required></textarea>
+
+<button type="submit" id="enviarBtn">Enviar SMS</button>
+
+<div class="status" id="statusMsg"></div>
+
+</form>
+
+</div>
+
+<script>
+
+// BOTÃO VOLTAR
+function voltarPagina(){
+    window.history.back();
+}
+
+// URL dinâmica (local e Render)
+const API_BASE = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+    ? "http://127.0.0.1:8000"
+    : window.location.origin;
+
+// Remover apenas acentos, mantendo pontuação, números, letras e quebras de linha
+function removerAcentos(texto) {
+    return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Normalização em tempo real do input
+function attachNormalization(inputElement) {
+    inputElement.addEventListener("input", () => {
+        const pos = inputElement.selectionStart;
+        inputElement.value = removerAcentos(inputElement.value);
+        inputElement.setSelectionRange(pos, pos);
+    });
+}
+
+// Aplica nos campos
+attachNormalization(document.getElementById("mensagem"));
+attachNormalization(document.getElementById("contactosExtras"));
+
+function getTiposSelecionados() {
+    return Array.from(document.querySelectorAll('input[name="tipo"]:checked'))
+                .map(cb => cb.value);
+}
+
+document.getElementById("formMensagem").addEventListener("submit", async function(e) {
+
+    e.preventDefault();
+
+    const btn = document.getElementById("enviarBtn");
+    const statusMsg = document.getElementById("statusMsg");
+
+    btn.disabled = true;
+    statusMsg.style.color = "black";
+    statusMsg.innerText = "A preparar envio...";
+
+    const tipos = getTiposSelecionados();
+    const mensagem = document.getElementById("mensagem").value; // mantém parágrafos
+    const contactosExtrasInput = document.getElementById("contactosExtras").value.trim();
+
+    let numeros = [];
+
+    try {
+
+        // Buscar números do banco
+        for (const tipo of tipos) {
+            const res = await fetch(`${API_BASE}/contactos/${tipo}`);
+            if (!res.ok) continue;
+            const dados = await res.json();
+            dados.forEach(c => numeros.push(c.telefone));
+        }
+
+        // Adicionar contactos extras
+        if (contactosExtrasInput) {
+            const extras = contactosExtrasInput
+                .split(",")
+                .map(c => c.trim())
+                .filter(c => /^\d{9}$/.test(c))
+                .map(c => "258" + c);
+
+            numeros = numeros.concat(extras);
+        }
+
+        // Remover duplicados
+        numeros = [...new Set(numeros)];
+
+        if (numeros.length === 0) {
+            statusMsg.style.color = "red";
+            statusMsg.innerText = "Erro: Nenhum número válido encontrado.";
+            btn.disabled = false;
+            return;
+        }
+
+        let enviados = [];
+        let falhados = [];
+
+        statusMsg.innerText = `A enviar para ${numeros.length} números...`;
+
+        // ENVIO SEQUENCIAL
+        for (let i = 0; i < numeros.length; i++) {
+
+            const numero = numeros[i];
+
+            statusMsg.innerText =
+                `A enviar (${i + 1}/${numeros.length})...`;
+
+            const payload = {
+                sender_id: "ESG-DUNDA",
+                mensagem: mensagem, // mantém parágrafos
+                numeros: [numero]
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/sms/enviar`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!res.ok) {
+                    falhados.push(numero);
+                } else {
+                    enviados.push(numero);
+                }
+
+            } catch (err) {
+                falhados.push(numero);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+
+        statusMsg.style.color = falhados.length > 0 ? "orange" : "green";
+        statusMsg.innerText =
+            `Envio concluído ✅\nEnviados: ${enviados.length} | Falhados: ${falhados.length}`;
+
+        document.getElementById("formMensagem").reset();
+
+    } catch (error) {
+
+        statusMsg.style.color = "red";
+        statusMsg.innerText = "Erro: " + error.message;
+    }
+
+    btn.disabled = false;
+
+});
+</script>
+
+</body>
+</html>

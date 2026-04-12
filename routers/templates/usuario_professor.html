@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>SIGE- EP-Phandira-2</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Segoe UI', sans-serif;
+}
+
+html, body {
+    height: 100%;
+}
+
+body{
+    display:flex;
+    min-height:100%;
+    background:#f1f5f9;
+}
+
+/* SIDEBAR */
+.sidebar{
+    width:260px;
+    background:linear-gradient(180deg,#06b6d4,#22c55e);
+    color:white;
+    padding:25px;
+}
+
+.logo{
+    font-size:22px;
+    font-weight:bold;
+    margin-bottom:40px;
+}
+
+/* MENU LATERAL */
+.menu{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+.menu a{
+    text-decoration:none;
+    color:white;
+    padding:12px;
+    border-radius:8px;
+    background:rgba(255,255,255,0.1);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    transition:.3s;
+}
+
+.menu a:hover{
+    background:rgba(255,255,255,0.25);
+}
+
+/* MAIN */
+.main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+}
+
+/* TOPBAR */
+.topbar{
+    height:70px;
+    background:white;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 30px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* CONTENT */
+.content{
+    padding:25px 30px;
+    flex:1;
+}
+
+.section{
+    background:white;
+    padding:25px;
+    border-radius:16px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.07);
+}
+
+.section h2{
+    margin-bottom:20px;
+    color:#0f172a;
+}
+
+.action-btn{
+    padding:12px 18px;
+    margin:6px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(135deg,#06b6d4,#22c55e);
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+/* FOOTER */
+.footer{
+    padding:12px 30px;
+    font-size:13px;
+    color:#64748b;
+    background:white;
+    box-shadow:0 -2px 8px rgba(0,0,0,0.05);
+    margin-top:auto;
+    text-align:right;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="logo">
+        🏫 Phandira-2
+    </div>
+    <div class="menu">
+        <a href="#">Dashboard</a>
+        <a href="#">Ver Alunos</a>
+        <a href="#">Ver Disciplinas</a>
+        <a href="#">Lançar Notas</a>
+        <a href="#">Pauta Trimestral</a>
+        <a href="#">Pauta Anual</a>
+        <a href="#">Sair</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <h3>Painel Professor</h3>
+        <strong>👤 Professor</strong>
+    </div>
+
+    <div class="footer">
+        © <span id="year"></span> Proempy Services — Todos os direitos reservados.
+    </div>
+</div>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>

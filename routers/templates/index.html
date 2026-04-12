@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<title>ESG-Dunda</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI', sans-serif;}
+body{background:#f1f5f9;height:100vh;}
+.navbar{background:#06b6d4;padding:15px 40px;display:flex;justify-content:space-between;align-items:center;color:white;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:bold;}
+.menu a{text-decoration:none;color:white;margin-left:20px;padding:8px 16px;border-radius:8px;display:inline-flex;align-items:center;gap:6px;transition:.3s;cursor:pointer;}
+.menu a:hover{background:rgba(255,255,255,0.25);}
+.container{display:flex;justify-content:center;align-items:center;height:calc(100vh - 70px);}
+.card{background:linear-gradient(135deg,#22d3ee,#22c55e);padding:55px;border-radius:18px;text-align:center;width:460px;color:white;box-shadow:0 15px 40px rgba(0,0,0,0.12);}
+.welcome-icon{margin-bottom:15px;}
+.card h1{font-size:24px;margin-bottom:10px;}
+.card p{font-size:17px;opacity:.95;}
+svg{width:22px;height:22px;fill:currentColor;}
+.welcome-icon svg{width:48px;height:48px;}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);justify-content:center;align-items:center;}
+.modal-content{background:white;padding:30px;border-radius:14px;width:340px;box-shadow:0 10px 30px rgba(0,0,0,.2);}
+.input-group{margin-bottom:15px;}
+.input-group input{width:100%;padding:10px;border-radius:8px;border:1px solid #cbd5e1;outline:none;}
+.input-group input:focus{border-color:#06b6d4;}
+.btn{width:100%;padding:10px;border:none;border-radius:8px;background:#06b6d4;color:white;font-weight:bold;cursor:pointer;transition:.3s;}
+.btn:hover{background:#0891b2;}
+.close{background:#e2e8f0;color:#0f172a;margin-top:8px;}
+.close:hover{background:#cbd5e1;}
+.error{color:red;font-size:14px;margin-bottom:10px;display:none;text-align:center;transition:opacity 0.5s;}
+.developer{position:fixed;bottom:45px;right:20px;font-size:14px;color:#334155;background:rgba(255,255,255,0.7);backdrop-filter:blur(6px);padding:6px 12px;border-radius:20px;}
+.developer strong{color:#0891b2;}
+.copyright{position:fixed;bottom:15px;right:20px;font-size:13px;color:#64748b;}
+</style>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        <svg viewBox="0 0 24 24">
+            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/>
+        </svg>
+        ESG-DUNDA
+    </div>
+
+    <div class="menu">
+        <a onclick="openModal()">
+            <svg viewBox="0 0 24 24">
+                <path d="M10 17l5-5-5-5v3H3v4h7v3zm9-14H9a2 2 0 00-2 2v4h2V5h10v14H9v-4H7v4a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2z"/>
+            </svg>
+            Login
+        </a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card">
+        <div class="welcome-icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2a7 7 0 017 7c0 5-7 13-7 13S5 14 5 9a7 7 0 017-7z"/>
+            </svg>
+        </div>
+
+        <h1>Bem-vindo ao sistema de envio de SMS da ESG-Dunda</h1>
+        <p>Uma plataforma moderna para facilitar a administração escolar.</p>
+    </div>
+</div>
+
+<!-- MODAL LOGIN -->
+<div class="modal" id="loginModal">
+    <div class="modal-content">
+
+        <div id="errorMsg" class="error"></div>
+
+        <form id="loginForm">
+
+            <div class="input-group">
+                <input name="usuario" placeholder="Usuário" required>
+            </div>
+
+            <div class="input-group">
+                <input type="password" name="senha" placeholder="Senha" required>
+            </div>
+
+            <button class="btn" type="submit">OK</button>
+        </form>
+
+        <button class="btn close" onclick="closeModal()">Cancelar</button>
+
+    </div>
+</div>
+
+<div class="developer">
+    Desenvolvido por <strong>ProemPy Services</strong>
+</div>
+
+<div class="copyright">
+    © <span id="year"></span> ProemPy Services. Todos os direitos reservados.
+</div>
+
+<script>
+document.getElementById("year").textContent = new Date().getFullYear();
+
+function openModal(){ document.getElementById("loginModal").style.display="flex"; }
+function closeModal(){ document.getElementById("loginModal").style.display="none"; }
+window.onclick = function(e){ const modal=document.getElementById("loginModal"); if(e.target===modal){ modal.style.display="none"; } }
+
+// LOGIN COM TRATAMENTO CORRETO
+document.getElementById("loginForm").addEventListener("submit", async function(e){
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    try {
+        const response = await fetch("/dashboard", {
+            method: "POST",
+            body: new URLSearchParams(formData)
+        });
+
+        const errorDiv = document.getElementById("errorMsg");
+
+        if(response.ok){
+            // LOGIN CORRETO → HTML retornado
+            const html = await response.text();
+            document.open();
+            document.write(html);
+            document.close();
+        } else {
+            // LOGIN INVÁLIDO → JSON retornado
+            let data;
+            try { data = await response.json(); } catch(err){ data = {detail:"Erro desconhecido"}; }
+
+            // Substituir "Usuário não encontrado" por "Usuário ou senha inválidos"
+            let mensagem = data.detail || "Usuário ou senha inválidos";
+            if(mensagem.toLowerCase().includes("usuário não encontrado")){
+                mensagem = "Dados de Acesso Inválidos! Confirme e tente novamente";
+            }
+
+            errorDiv.style.display="block";
+            errorDiv.style.opacity = "1";
+            errorDiv.textContent = mensagem;
+
+            // Mensagem desaparece automaticamente depois de 3 segundos
+            setTimeout(() => {
+                errorDiv.style.opacity = "0";
+                setTimeout(() => { errorDiv.style.display="none"; }, 500);
+            }, 10000);
+        }
+
+    } catch(err){
+        console.error("Erro de conexão:", err);
+        const errorDiv = document.getElementById("errorMsg");
+        errorDiv.style.display="block";
+        errorDiv.style.opacity = "1";
+        errorDiv.textContent = "Erro no servidor";
+        setTimeout(() => {
+            errorDiv.style.opacity = "0";
+            setTimeout(() => { errorDiv.style.display="none"; }, 500);
+        }, 3000);
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>ESG-DUNDA</title>
+
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+        html,body{height:100%;}
+        body{display:flex;background:#f1f5f9;}
+
+        /* SIDEBAR */
+        .sidebar{
+            width:260px;
+            background:linear-gradient(180deg,#06b6d4,#22c55e);
+            color:white;
+            padding:20px;
+            display:flex;
+            flex-direction:column;
+            height:100vh;      /* Ocupa toda altura da tela */
+            overflow-y:auto;   /* Adiciona rolagem se necessário */
+        }
+
+        /* SCROLLBAR VERMELHA E SEMPRE GROSSA */
+        .sidebar::-webkit-scrollbar {
+            width:12px; /* largura fixa e grossa */
+        }
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #ff0000; /* vermelho sólido */
+            border-radius:6px;
+            border: 2px solid #f1f5f9; /* borda clara para destacar */
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #cc0000; /* vermelho mais escuro ao passar mouse */
+        }
+
+        .back-btn{
+            font-size:22px;
+            cursor:pointer;
+            margin-bottom:10px;
+            padding:6px 10px;
+            border-radius:6px;
+        }
+        .back-btn:hover{background:rgba(255,255,255,0.25);}
+        .logo{
+            font-size:22px;
+            font-weight:bold;
+            margin-bottom:40px;
+        }
+        .menu{
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+        }
+        .menu a{
+            text-decoration:none;
+            color:white;
+            padding:12px;
+            border-radius:8px;
+            background:rgba(255,255,255,0.1);
+            cursor:pointer;
+        }
+        .menu a:hover{background:rgba(255,255,255,0.25);}
+        .recarregar-btn{
+            background:#ef4444 !important;
+            font-weight:bold;
+            text-align:center;
+        }
+        .recarregar-btn:hover{
+            background:#dc2626 !important;
+        }
+
+        .main{
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            position:relative;
+        }
+        .topbar{
+            height:70px;
+            background:white;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:0 30px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.05);
+        }
+        .painel{
+            flex:1;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+        }
+        .footer{
+            padding:12px 30px;
+            font-size:13px;
+            color:#64748b;
+            background:white;
+            text-align:right;
+        }
+        #smsCount{
+            font-weight:bold;
+            position:absolute;
+            right:30px;
+            top:20px;
+        }
+        .error-message {
+            text-align: center;
+            padding: 20px;
+            background-color: #ffcccc;
+            color: red;
+            border: 2px solid red;
+            border-radius: 5px;
+            display: none;
+        }
+        .retry-button {
+            background-color: #f39c12;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .retry-button:hover {
+            background-color: #e67e22;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <span class="back-btn" onclick="voltarDashboard()">←</span>
+
+    <div class="logo">🏫 ESG-DUNDA</div>
+
+    <div class="menu">
+        <a onclick="verificarESeguirei(criarContacto)">Gerenciar contactos de funcionarios-SMS</a>
+        <a onclick="verificarESeguirei(agendarEncontros)">Agendar encontros-SMS</a>
+        <a onclick="verificarESeguirei(agendarEncontros_coletivo)">Agendar encontros do colectivo da direcção</a>
+        <a onclick="verificarESeguirei(agendarOutros_encontros)">Agendar encontros com elementos/grupo específicos</a>
+        <a onclick="verificarESeguirei(criarInformacoes)">Enviar outras informacoes-SMS</a>
+        <a onclick="verificarESeguirei(criarAssistencias)">Assistências mútuas</a>
+        <a onclick="verificarESeguirei(criarAss_direccao)">Assistências direcção</a>
+        <a class="recarregar-btn" onclick="verificarESeguirei(recarregarSMS)">💳 Recarregar SMS</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <span id="smsCount"></span>
+    </div>
+
+    <div class="painel">
+        <div>
+            <h2>Bem-vindo ao painel</h2>
+            <p>Selecione uma opção no menu lateral.</p>
+        </div>
+    </div>
+
+    <div class="footer">
+        © <span id="year"></span> Proempy Services
+    </div>
+
+    <div id="error-message" class="error-message">
+        <p>Verifica a ligação da internet e tente novamente.</p>
+        <button class="retry-button" onclick="tentarNovamente()">Tentar novamente</button>
+    </div>
+</div>
+
+<script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    let funcaoParaRedirecionar = null; // Variável para armazenar a função de navegação a ser chamada depois
+
+    // Função de verificação da API e redirecionamento
+    async function fetchDataAndRedirect() {
+        const errorMessageDiv = document.getElementById("error-message");
+
+        try {
+            const apiResponse = await fetch("https://api.mozesms.com/v1/account/balance", {
+                headers: { 'Authorization': `Bearer ${'bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk'}` }
+            });
+
+            if (apiResponse.ok) {
+                // Se a API for bem-sucedida, chama a função armazenada
+                funcaoParaRedirecionar();
+            } else {
+                throw new Error("Falha ao buscar dados.");
+            }
+        } catch (error) {
+            errorMessageDiv.style.display = "block";  // Exibe a mensagem de erro
+        }
+    }
+
+    // Função para tentar novamente
+    function tentarNovamente() {
+        const errorMessageDiv = document.getElementById("error-message");
+        errorMessageDiv.style.display = "none"; // Esconde a mensagem de erro
+
+        // Re-executa a verificação da API
+        fetchDataAndRedirect();
+    }
+
+    // Função que armazena a função de navegação original e chama a verificação
+    function verificarESeguirei(funcao) {
+        funcaoParaRedirecionar = funcao; // Armazena a função
+        fetchDataAndRedirect(); // Verifica a API antes de redirecionar
+    }
+
+    // Funções de navegação
+    function voltarDashboard() { window.location.href = "/ep_phandira_2"; }
+    function agendarEncontros() { window.location.href = "/encontros"; }
+    function agendarEncontros_coletivo() { window.location.href = "/encontros_coletivo"; }
+    function agendarOutros_encontros() { window.location.href = "/outro_encontro"; }
+    function criarContacto() { window.location.href = "/contacto"; }
+    function criarInformacoes() { window.location.href = "/informacoes"; }
+    function criarAssistencias() { window.location.href = "/assistencia"; }
+    function criarAss_direccao() { window.location.href = "/ass_direccao"; }
+
+    // Função recarregar SMS
+    function recarregarSMS(){
+        window.location.href = "/comprar_creditos";
+    }
+
+    window.onload = function() {
+        consultarSaldo();
+        setInterval(consultarSaldo, 10000);
+    };
+
+    async function consultarSaldo() {
+        const url = "https://api.mozesms.com/v1/account/balance";
+        const token = "bWtfNGEyMTVjMzA1OGQ5ZTEyNDU1YWFmZWRmNTBhM2FlNDI6NDI4Mjpza19kMTNmYWNkMzE2YmU4YjQxM2ZhNDZlZmRjZWRkM2ViZWM3ZDc1OTBkMWJkN2I3ZTRjZmExY2JmMmZhYWRkYWRk";
+
+        try {
+            const response = await fetch(url, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (!response.ok) throw new Error('Erro ao consultar saldo');
+
+            const data = await response.json();
+
+            if (data.success) {
+                const saldo = data.data.balance;
+                const sms = Math.floor(saldo * (1/1.356)); // ✅ Usando Math.floor
+                mostrarSmsEquivalentes(sms);
+            }
+
+        } catch (error) {
+            document.getElementById('smsCount').textContent = "Erro ao carregar saldo";
+        }
+    }
+
+    function mostrarSmsEquivalentes(sms){
+        const el = document.getElementById('smsCount');
+        el.innerHTML = `Saldo SMS: ${sms}`; // apenas inteiro
+
+        if (sms <= 100){
+            el.innerHTML += `
+                <br>
+                <span style="color:red;cursor:pointer;"
+                      onclick="recarregarSMS()">
+                      Recarregar
+                </span>
+            `;
+        }
+    }
+</script>
+
+</body>
+</html>
