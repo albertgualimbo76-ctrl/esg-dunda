@@ -8,9 +8,6 @@ from models.assistencia_direcao import AssistenciaDirecao
 from models.contactos_professores import ContactoProfessor
 from models.contactos_diretor import ContactoDiretor
 
-# Intervalo de verificação do loop (em segundos)
-INTERVALO_VERIFICACAO = 60
-
 
 # ==========================
 # 📩 Função para enviar SMS via endpoint
@@ -43,101 +40,90 @@ async def enviar_sms_api(mensagem, numeros):
 
 
 # ==========================
-# 🔄 Monitor de assistências de direção
+# 🔄 EXECUÇÃO ÚNICA (SEM WHILE TRUE)
 # ==========================
 async def monitorar_assistencias_direcao():
-    print("🔄 Monitor automático de assistências de direção iniciado")
+    print("🔄 Execução única de assistências de direção iniciada")
 
-    while True:
-        agora = datetime.now()
+    agora = datetime.now()
 
-        async with SessionLocal() as db:
-            # Seleciona todas assistências aprovadas
-            result = await db.execute(
-                select(AssistenciaDirecao)
-                .where(AssistenciaDirecao.status_aprovacao == "APROVADO")
+    async with SessionLocal() as db:
+
+        result = await db.execute(
+            select(AssistenciaDirecao)
+            .where(AssistenciaDirecao.status_aprovacao == "APROVADO")
+        )
+        assistencias = result.scalars().all()
+
+        print(f"\n📅 Execução em {agora}")
+        print(f"📊 Assistências encontradas: {len(assistencias)}")
+
+        for a in assistencias:
+
+            data_assistencia = a.data_hora
+
+            if agora >= data_assistencia:
+                print(f"⚠️ Assistência já passou (ID {a.id})")
+                continue
+
+            momento_envio = data_assistencia - timedelta(days=1)
+
+            # ==========================
+            # Professor assistido
+            # ==========================
+            result_prof = await db.execute(
+                select(ContactoProfessor)
+                .where(ContactoProfessor.nome == a.professor_assistido_nome)
             )
-            assistencias = result.scalars().all()
+            professor_assistido = result_prof.scalars().first()
 
-            print(f"\n📅 Verificação em {agora}, assistências encontradas: {len(assistencias)}")
+            # ==========================
+            # Diretor assistente
+            # ==========================
+            result_dir = await db.execute(
+                select(ContactoDiretor)
+                .where(ContactoDiretor.nome == a.diretor_assistente_nome)
+            )
+            diretor_assistente = result_dir.scalars().first()
 
-            for a in assistencias:
-                data_assistencia = a.data_hora
+            # ==========================
+            # ENVIO SMS
+            # ==========================
+            if agora >= momento_envio:
 
-                # ==========================
-                # Se a aula já passou, não envia SMS
-                # ==========================
-                if agora >= data_assistencia:
-                    print(f"⚠️ Assistência já passou (ID {a.id})")
-                    continue
-
-                # Momento de alerta/convocatória (1 dia antes)
-                momento_envio = data_assistencia - timedelta(days=1)
-
-                # ==========================
-                # Buscar professor assistido
-                # ==========================
-                result_prof = await db.execute(
-                    select(ContactoProfessor)
-                    .where(ContactoProfessor.nome == a.professor_assistido_nome)
-                )
-                professor_assistido = result_prof.scalars().first()
-
-                # ==========================
-                # Buscar diretor assistente
-                # ==========================
-                result_dir = await db.execute(
-                    select(ContactoDiretor)
-                    .where(ContactoDiretor.nome == a.diretor_assistente_nome)
-                )
-                diretor_assistente = result_dir.scalars().first()
-
-                # ==========================
-                # Enviar SMS ALERTA / Convocatória
-                # ==========================
-                if agora >= momento_envio:
-                    # Mensagem professor assistido
-                    if professor_assistido:
-                        mensagem_prof = (
-                            f"Saudacoes, amanha dia {a.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h "
-                            f"tera uma assistencia de aula na disciplina de {a.disciplina} "
-                            f"as {a.data_hora.strftime('%H:%M')}h, pelo membro da direcao "
-                            f"{a.diretor_assistente_nome}. Bom trabalho."
-                        )
-                        sucesso = await enviar_sms_api(mensagem_prof, [professor_assistido.telefone])
-                        if sucesso:
-                            print(f"✅ SMS enviado ao professor: {professor_assistido.telefone}")
-                        else:
-                            print(f"❌ Falha ao enviar SMS ao professor: {professor_assistido.telefone}")
-                        await asyncio.sleep(5)
-
-                    if diretor_assistente:
-                        mensagem_dir = (
-                            f"Saudacoes, amanha {a.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h "
-                            f"devera assistir a aula de {a.disciplina} da {a.classe} classe, "
-                            f"turma {a.turma}, ao professor {a.professor_assistido_nome}, "
-                            f"na sala {a.numero_sala}."
-                        )
-                        sucesso = await enviar_sms_api(mensagem_dir, [diretor_assistente.telefone])
-                        if sucesso:
-                            print(f"✅ SMS enviado ao diretor: {diretor_assistente.telefone}")
-                        else:
-                            print(f"❌ Falha ao enviar SMS ao diretor: {diretor_assistente.telefone}")
-                        await asyncio.sleep(5)
-
-                    # ==========================
-                    # Atualizar status para evitar reenvio
-                    # ==========================
-                    await db.execute(
-                        update(AssistenciaDirecao)
-                        .where(AssistenciaDirecao.id == a.id)
-                        .values(status_aprovacao="NAO")  # marca como enviado
+                if professor_assistido:
+                    mensagem_prof = (
+                        f"Saudacoes, amanha dia {a.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h "
+                        f"tera uma assistencia de aula na disciplina de {a.disciplina} "
+                        f"as {a.data_hora.strftime('%H:%M')}h, pelo membro da direcao "
+                        f"{a.diretor_assistente_nome}. Bom trabalho."
                     )
-                    await db.commit()
-                    print(f"✅ Status atualizado para NAO (Assistência ID {a.id})")
 
-        # Aguardar INTERVALO_VERIFICACAO segundos
-        await asyncio.sleep(INTERVALO_VERIFICACAO)
+                    await enviar_sms_api(mensagem_prof, [professor_assistido.telefone])
+                    await asyncio.sleep(5)
+
+                if diretor_assistente:
+                    mensagem_dir = (
+                        f"Saudacoes, amanha {a.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h "
+                        f"devera assistir a aula de {a.disciplina} da {a.classe} classe, "
+                        f"turma {a.turma}, ao professor {a.professor_assistido_nome}, "
+                        f"na sala {a.numero_sala}."
+                    )
+
+                    await enviar_sms_api(mensagem_dir, [diretor_assistente.telefone])
+                    await asyncio.sleep(5)
+
+                # ==========================
+                # Atualizar status
+                # ==========================
+                await db.execute(
+                    update(AssistenciaDirecao)
+                    .where(AssistenciaDirecao.id == a.id)
+                    .values(status_aprovacao="NAO")
+                )
+                await db.commit()
+
+                print(f"✅ Status atualizado (ID {a.id})")
 
 
 # ==========================
