@@ -88,7 +88,7 @@ async def monitorar_encontros_coletivo():
                 if agora >= momento_alerta:
                     mensagem_alerta = (
                         f"Saudacoes, ha um encontro do colectivo referente a "
-                        f"{encontro.titulo} agendado para "
+                        f"{encontro.titulo}  sessao, agendado para "
                         f"{encontro.data_hora.strftime('%d/%m/%Y, %H:%M')}h."
                     )
 
@@ -114,7 +114,7 @@ async def monitorar_encontros_coletivo():
                 if agora >= momento_conv:
                     mensagem_conv = (
                         f"Incumbe me o Exmo Senhor Director da escola em convocar todos membros de direcção para participarem na {encontro.titulo}, "
-                        f"no dia {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h no gabinete da Directora."
+                        f"no dia {encontro.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h no gabinete do Director."
                     )
 
                     enviados = 0

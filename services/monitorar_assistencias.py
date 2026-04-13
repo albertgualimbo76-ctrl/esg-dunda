@@ -98,7 +98,7 @@ async def monitorar_assistencias():
                     f"Saudacoes, amanha dia {a.data_hora.strftime('%d/%m/%Y')} "
                     f"tera uma assistencia de aula na disciplina de {a.disciplina} "
                     f"pelas {a.data_hora.strftime('%H:%M')}h, "
-                    f"pelo professor {a.professor_assistente_nome}. Bom trabalho."
+                    f"pelo(a) professor(a) {a.professor_assistente_nome}. Bom trabalho."
                 )
 
                 await enviar_sms_api(mensagem_assistido, [professor_assistido.telefone])
@@ -109,7 +109,7 @@ async def monitorar_assistencias():
                     f"Saudacoes, amanha dia {a.data_hora.strftime('%d/%m/%Y')} "
                     f"pela {a.data_hora.strftime('%H:%M')}h, devera efectuar uma "
                     f"assistencia de aula de {a.disciplina}, na {a.classe} classe, "
-                    f"turma {a.turma}, ao professor {a.professor_assistido_nome}, "
+                    f"turma {a.turma}, a(o) professor(a) {a.professor_assistido_nome}, "
                     f"na sala numero {a.numero_sala}."
                 )
 

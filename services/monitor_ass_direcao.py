@@ -106,7 +106,7 @@ async def monitorar_assistencias_direcao():
                     mensagem_dir = (
                         f"Saudacoes, amanha {a.data_hora.strftime('%d/%m/%Y, pelas %H:%M')}h "
                         f"devera assistir a aula de {a.disciplina} da {a.classe} classe, "
-                        f"turma {a.turma}, ao professor {a.professor_assistido_nome}, "
+                        f"turma {a.turma}, a(o) professor(a) {a.professor_assistido_nome}, "
                         f"na sala {a.numero_sala}."
                     )
 
